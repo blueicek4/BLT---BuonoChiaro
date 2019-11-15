@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<root>
+  <TestoDomanda key="inizio" value="Leggi Ticket"/>
+  <TestoDomanda key="leggi" value="Tot. Scontrino: {0} - Buoni: {1} - Tot. Buoni: {2} - Ultimo Buono: {3}"/>
+  <TestoDomanda key="gestione" value="Ultimo buono pasto: {0}€ - Totale buoni pasto: {1}€&#10;Si vuole tornare al conto?"/>
+  <TestoDomanda key="erroreppt" value="Buono Pasto già letto: {0} &#10;Totale buoni pasto: {1}€&#10;Si vuole leggere altri buoni pasto?"/>
+  <TestoDomanda key="errorebc" value="Leggi Ticket"/>
+  <TestoDomanda key="massimobuoni" value="Sono stati inseriti {0} buoni pasto, Valore: {1}€.&#10;Non è possibile inserire altri buoni pasto."/>
+  <TestoDomanda key="massimoraggiunto" value="E' stato raggiunto il massimo importo. Totale Scontrino: {0}€ - Totale Buoni: {1}€"/>
+  <TestoDomanda key="erroreresto" value="L'importo dei buoni non può essere superiore al totale da pagare"/>
+  <TestoDomanda key="erroreapertura" value="Errore connessione BuonoChiaro.&#10;Errore: {0}"/>
+  <TestoDomanda key="errorevalidazione" value="Errore validazione Ticket. Buono Pasto letto: {0}&#10;Errore: {1}"/>
+  <TestoDomanda key="errorechiusura" value="Errore Chiusura Ticket.&#10;Errore: {0}&#10;Che si Vuole fare? Riprova (Riprova Invio) - Interrompi (Ferma Emissione Conto) - Annulla (Ferma e Storna tutti i ticket)"/>  
+  <TestoDomanda key="erroreannullamento" value="Errore Annullamento Ticket. Buono Pasto letto: {0}&#10;Errore: {1}&#10;Che si Vuole fare?"/>
+  <TestoDomanda key="erroreannullamentoresto" value="Errore Annullamento Ticket di Resto.&#10;Buono Pasto letto: {0}&#10;Errore: {1}&#10;Verrà Emesso un buono resto"/>
+  <TestoDomanda key="sceltazione" value="Scegli cosa vuoi fare"/>
+  <TestoDomanda key="annullaBuonoPasto" value="Leggi il buono pasto da annullare" />
+  <TestoDomanda key="azzerabpinizio" value="Annulla Buono Pasto Supervisor.&#10;Inserire la Password per abilitare la funzione" />
+  <TestoDomanda key="azzerabppassword" value="Annulla Buono Pasto Supervisor.&#10;Inserire il numero scontrino da annullare" />
+  <TestoDomanda key="azzerabppassworderrore" value="Annulla Buono Pasto Supervisor.&#10;Password errata. Inserire password" />
+  <TestoDomanda key="azzerabpscontrino" value="Annulla Buono Pasto Supervisor.&#10;Inserire il buono pasto da annullare" />
+  <TestoDomanda key="azzerabpbuono" value="Annulla Buono Pasto Supervisor.&#10;Inserire il buono pasto da annullare" />
+  <TestoDomanda key="azzerabpok" value="Annulla Buono Pasto Supervisor.&#10;Buono Pasto annullato correttamente." />
+  <TestoDomanda key="azzerabpko" value="Annulla Buono Pasto Supervisor.&#10;Errore Annullamento Buono Pasto {0}.&#10;Errore: {1}" />
+  <TestoDomanda key="annullabpok" value="Buono pasto annullato correttamente" />
+  <TestoDomanda key="annullascontrinook" value="Scontrino annullato correttamente" />
+  <TestoDomanda key="annullascontrinoerrore" value="Errore! Non è stato possibile annullare i seguenti buoni pasto:&#10;Lista:{0}" />
+</root>

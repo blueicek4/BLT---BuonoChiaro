@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<root>
+  <SceltaAzione key="leggi" value="Leggi Ticket"/>
+  <SceltaAzione key="annulla" value="Annulla Ticket"/>
+  <SceltaAzione key="azzera" value="Azzera Scontrino"/>
+  <SceltaAzione key="supervisor" value="Supervisor Void"/>
+  <ErroreAnnullaBuono key="annulla" value="Anulla e Rimuovi da Conto" />
+  <ErroreAnnullaBuono key="mantieni" value="Interrompi" />
+  <ErroreAnnullaBuono key="riprova" value="riprova" />
+  <erroreannullamento key="interrompi" value="Interrompi" />
+  <erroreannullamento key="mantieni" value="Tieni Buono" />
+  <erroreannullamento key="riprova" value="Riprova" />
+</root>
