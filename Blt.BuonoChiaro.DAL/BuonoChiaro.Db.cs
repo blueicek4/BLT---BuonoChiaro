@@ -8,12 +8,22 @@ using System.Net.Sockets;
 using System.Net;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using System.Configuration;
+
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace Blt.BuonoChiaro.DAL
 {
     public class BuonoChiaroDb
     {
+        Configuration config;
+        public BuonoChiaroDb()
+        {
+            string exeConfigPath = typeof(BuonoChiaroDb).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
+        }
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public TicketOpenRes ApriTicket(ContrattoConto conto)
@@ -31,7 +41,7 @@ namespace Blt.BuonoChiaro.DAL
                     TicketOpenReq apriTicket = new TicketOpenReq();
                     apriTicket.Init(conto);
                     string request = apriTicket.ToXML();
-                    string logFileName = System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["LogPath"]
+                    string logFileName = System.IO.Path.Combine(config.AppSettings.Settings["LogPath"].Value
                         , conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "_" + apriTicket.TipoOperazione + "_{0}_{1}.xml");
                     System.IO.File.WriteAllText(String.Format(logFileName, "request", DateTime.Now.ToString("hhmmss")), request);
                     string response = InviaSocket(request);
@@ -54,7 +64,7 @@ namespace Blt.BuonoChiaro.DAL
                 validaTicket.Init(conto);
                 validaTicket.CaricaBuono(buono);
                 string request = validaTicket.ToXML();
-                string logFileName = System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["LogPath"]
+                string logFileName = System.IO.Path.Combine(config.AppSettings.Settings["LogPath"].Value
                     , conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "_" + validaTicket.TipoOperazione + "_{0}_{1}.xml");
                 System.IO.File.WriteAllText(String.Format(logFileName, "request", DateTime.Now.ToString("hhmmss")), request);
                 string response = InviaSocket(request);
@@ -76,7 +86,7 @@ namespace Blt.BuonoChiaro.DAL
                 validaTicket.Init(conto);
                 validaTicket.CaricaBuono(buono);
                 string request = validaTicket.ToXML();
-                string logFileName = System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["LogPath"]
+                string logFileName = System.IO.Path.Combine(config.AppSettings.Settings["LogPath"].Value
                     , conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "_" + validaTicket.TipoOperazione + "_{0}_{1}.xml");
                 System.IO.File.WriteAllText(String.Format(logFileName, "request", DateTime.Now.ToString("hhmmss")), request);
                 string response = InviaSocket(request);
@@ -118,7 +128,7 @@ namespace Blt.BuonoChiaro.DAL
                 apriTicket.NumeroScontrino = numeroConto;
                 apriTicket.Progressivo = apriTicket.Progressivo.Replace(conto.IdGestionale.ToString(), numeroConto);
                 string openrequest = apriTicket.ToXML();
-                string logFileName = System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["LogPath"]
+                string logFileName = System.IO.Path.Combine(config.AppSettings.Settings["LogPath"].Value
                     , conto.DataGestione.Value.ToString("yyMMdd") + "_" + numeroConto + "_" + apriTicket.TipoOperazione + "_{0}_{1}.xml");
                 System.IO.File.WriteAllText(String.Format(logFileName, "request", DateTime.Now.ToString("hhmmss")), openrequest);
                 string openresponse = InviaSocket(openrequest);
@@ -131,7 +141,7 @@ namespace Blt.BuonoChiaro.DAL
                 validaTicket.NumeroScontrino = numeroConto;
                 validaTicket.Progressivo = apriTicket.Progressivo.Replace(conto.IdGestionale.ToString(), numeroConto);
                 string request = validaTicket.ToXML();
-                logFileName = System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["LogPath"]
+                logFileName = System.IO.Path.Combine(config.AppSettings.Settings["LogPath"].Value
                     , conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "_" + validaTicket.TipoOperazione + "_{0}_{1}.xml");
                 System.IO.File.WriteAllText(String.Format(logFileName, "request", DateTime.Now.ToString("hhmmss")), request);
                 string response = InviaSocket(request);
@@ -153,7 +163,7 @@ namespace Blt.BuonoChiaro.DAL
                 TicketCloseReq apriTicket = new TicketCloseReq();
                 apriTicket.Init(conto);
                 string request = apriTicket.ToXML();
-                string logFileName = System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["LogPath"]
+                string logFileName = System.IO.Path.Combine(config.AppSettings.Settings["LogPath"].Value
                     , conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "_" + apriTicket.TipoOperazione + "_{0}_{1}.xml");
                 System.IO.File.WriteAllText(String.Format(logFileName, "request", DateTime.Now.ToString("hhmmss")), request);
                 string response = InviaSocket(request);
@@ -174,8 +184,8 @@ namespace Blt.BuonoChiaro.DAL
             {              
                 Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 //soc.
-                System.Net.IPAddress ipAdd = System.Net.IPAddress.Parse(System.Configuration.ConfigurationManager.AppSettings["BuonoChiaroServer"]);
-                System.Net.IPEndPoint remoteEP = new IPEndPoint(ipAdd, Convert.ToInt32(System.Configuration.ConfigurationManager.AppSettings["BuonoChiaroPorta"]));
+                System.Net.IPAddress ipAdd = System.Net.IPAddress.Parse(config.AppSettings.Settings["BuonoChiaroServer"].Value);
+                System.Net.IPEndPoint remoteEP = new IPEndPoint(ipAdd, Convert.ToInt32(config.AppSettings.Settings["BuonoChiaroPorta"].Value));
                 soc.Connect(remoteEP);
                 byte[] byData = System.Text.Encoding.ASCII.GetBytes(request);
                 soc.Send(byData);

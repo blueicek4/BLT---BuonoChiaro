@@ -12,8 +12,16 @@ using Blt.BuonoChiaro.BOL;
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace Blt.BuonoChiaro.Con
 {
-    class Program
+    public class Program
     {
+        public Configuration config;
+        public Program()
+        {
+            string exeConfigPath = typeof(Program).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
+        }
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static void Main(string[] args)
         {
@@ -25,10 +33,10 @@ namespace Blt.BuonoChiaro.Con
             string ipaddress;
             string port;
             List<string> plugins;
-            if (Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["isReplicaDatiAttivo"]))
+            if (Convert.ToBoolean(ConfigurationManager.AppSettings["isReplicaDatiAttivo"]))
             {
 
-                log.InfoFormat(String.Format(@"Avvio Host in corso su porta: {0} con ID: {1} per Plugin: {2}", System.Configuration.ConfigurationManager.AppSettings["PortaMessageBox"], System.Configuration.ConfigurationManager.AppSettings["IDMessageBox"], System.Configuration.ConfigurationManager.AppSettings["PluginAttivi"]));
+                log.InfoFormat(String.Format(@"Avvio Host in corso su porta: {0} con ID: {1} per Plugin: {2}", ConfigurationManager.AppSettings["PortaMessageBox"], ConfigurationManager.AppSettings["IDMessageBox"], ConfigurationManager.AppSettings["PluginAttivi"]));
 
                 GatewayHostPlugin.AvviaHost(AppDomain.CurrentDomain.BaseDirectory, out ipaddress, out port, out plugins);
                 log.InfoFormat(String.Format(@"Host Avviato!"));

@@ -22,9 +22,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             Configuration config;
 
-            string exeConfigPath = typeof(BltConfig).Assembly.Location;
-            if (System.IO.File.Exists(exeConfigPath + ".config"))
-                config = ConfigurationManager.OpenExeConfiguration(exeConfigPath);
+            string exeConfigPath = typeof(ParametriConto).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
             else if (System.IO.File.Exists(exeConfigPath + ".setup" + ".config"))
             {
                 ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();

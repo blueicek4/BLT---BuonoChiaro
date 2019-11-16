@@ -146,7 +146,7 @@ namespace HostPlugin
                                         foreach (CanalePlugin canale in attrCanali)
                                             plugin.CanaliAbilitati.Add(canale);
                                     }
-                                    if (System.Configuration.ConfigurationManager.AppSettings["PluginAttivi"].Split(',').ToList().Any(p => p == plugin.Nome))
+                                    if (ConfigurationManager.AppSettings["PluginAttivi"].Split(',').ToList().Any(p => p == plugin.Nome))
                                     {
                                         mPluginAttivi.Add(plugin);
                                     }

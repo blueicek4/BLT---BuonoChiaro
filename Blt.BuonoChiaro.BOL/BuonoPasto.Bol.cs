@@ -15,6 +15,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using PMessageBox.Contract.Conto;
+using System.Security.Cryptography;
 
 namespace Blt.BuonoChiaro.BOL
 {
@@ -22,6 +23,7 @@ namespace Blt.BuonoChiaro.BOL
     {
         public string idBuonoChiaro { get; set; }
         public Int32? IdConto { get; set; }
+        public string idScontrinoElettronico { get; set; }
         public string IdChiamata { get; set; }
         public string UltimaDomanda { get; set; }
         public string UltimaRisposta { get; set; }
@@ -33,6 +35,7 @@ namespace Blt.BuonoChiaro.BOL
         public string CodicePagamento { get; set; }
         public enumCodOper UltimoComandoBuonoChiaro { get; set; }
         private Int32?  _indiceParametri {get;set;}
+        Configuration config;
         public Decimal GetTotale()
         {
             try
@@ -63,6 +66,10 @@ namespace Blt.BuonoChiaro.BOL
         public ParametriConto()
         {
             _codici = new List<BuonoPasto>();
+            string exeConfigPath = typeof(ParametriConto).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
         }
         public String ToXml()
         {
@@ -84,7 +91,7 @@ namespace Blt.BuonoChiaro.BOL
                 this._codici.Add(bp);
                 return true;
             }
-            if (!Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["isAbilitaResto"]))
+            if (!Convert.ToBoolean(config.AppSettings.Settings["isAbilitaResto"].Value))
             {
                 if (this.GetTotale() + bp.Valore <= this.Totale)
                 {
@@ -110,6 +117,10 @@ namespace Blt.BuonoChiaro.BOL
         }
         public ParametriConto(string xml)
         {
+            string exeConfigPath = typeof(ParametriConto).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
             try
             {
                 StringReader strReader = null;
@@ -141,6 +152,7 @@ namespace Blt.BuonoChiaro.BOL
                 this.idBuonoChiaro = obj.idBuonoChiaro;
                 this._codici = obj.Codici;
                 this.IdChiamata = obj.IdChiamata;
+                this.idScontrinoElettronico = obj.idScontrinoElettronico;
                 this.IdConto = obj.IdConto;
                 this.Stato = obj.Stato;
                 this.Totale = obj.Totale;
@@ -155,23 +167,29 @@ namespace Blt.BuonoChiaro.BOL
         }
         public ParametriConto(ContrattoConto conto)
         {
-            if(conto.Tool_Parametri == null)
+            string exeConfigPath = typeof(ParametriConto).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
+            if (conto.Tool_Parametri == null)
             {
+                this.idScontrinoElettronico = conto.NumeroScontrinoFiscale;
                 this.IdConto = conto.IdGestionale;
                 this.IdChiamata = conto.Tool_IdTastoCustom;
                 this.Stato = StatoConto.inizio;
-                this.CategoriaPagamento = System.Configuration.ConfigurationManager.AppSettings["CategoriaPagamento"];
-                this.CodicePagamento = System.Configuration.ConfigurationManager.AppSettings["CodicePagamento"];
+                this.CategoriaPagamento = config.AppSettings.Settings["CategoriaPagamento"].Value;
+                this.CodicePagamento = config.AppSettings.Settings["CodicePagamento"].Value;
                 this._indiceParametri = null;
                 this._codici = new List<BuonoPasto>();
             }
             else if (conto.Tool_Parametri[0] == null)
             {
+                this.idScontrinoElettronico = conto.NumeroScontrinoFiscale;
                 this.IdConto = conto.IdGestionale;
                 this.IdChiamata = conto.Tool_IdTastoCustom;
                 this.Stato = StatoConto.inizio;
-                this.CategoriaPagamento = System.Configuration.ConfigurationManager.AppSettings["CategoriaPagamento"];
-                this.CodicePagamento = System.Configuration.ConfigurationManager.AppSettings["CodicePagamento"];
+                this.CategoriaPagamento = config.AppSettings.Settings["CategoriaPagamento"].Value;
+                this.CodicePagamento = config.AppSettings.Settings["CodicePagamento"].Value;
                 this._indiceParametri = 0;
                 this._codici = new List<BuonoPasto>();
             }
@@ -185,6 +203,7 @@ namespace Blt.BuonoChiaro.BOL
                         this.idBuonoChiaro = par.idBuonoChiaro;
                         this._codici = par.Codici;
                         this.IdChiamata = par.IdChiamata;
+                        this.idScontrinoElettronico = par.idScontrinoElettronico;
                         this.IdConto = par.IdConto;
                         this.Stato = par.Stato;
                         this.Totale = par.Totale;
@@ -312,7 +331,7 @@ namespace Blt.BuonoChiaro.BOL
                         i++;
                     }
                 }
-                //cmd1.SelectCommand.CommandTimeout = Convert.ToInt32(System.Configuration.ConfigurationManager.AppSettings["SqlTimeout"]);
+                //cmd1.SelectCommand.CommandTimeout = Convert.ToInt32(config.AppSettings.Settings["SqlTimeout"].Value);
 
                 cmd1.Fill(sqlquery);
 
@@ -403,6 +422,51 @@ namespace Blt.BuonoChiaro.BOL
                 res = -1;
             }
             return res;
+        }
+
+        public static string Hash(string input)
+        {
+            using (SHA1Managed sha1 = new SHA1Managed())
+            {
+                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+                var sb = new StringBuilder(hash.Length * 2);
+
+                foreach (byte b in hash)
+                {
+                    // can be "x2" if you want lowercase
+                    sb.Append(b.ToString("X2"));
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        public static Boolean VerificaLicenza()
+        {
+            try
+            {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
+
+                string percorso = System.IO.Path.Combine(System.IO.Directory.GetParent(System.IO.Path.GetDirectoryName(typeof(Helper).Assembly.Location)).ToString(), "FileConfigurazione.xml");
+                XmlDocument doc = new XmlDocument();
+                doc.Load(percorso);
+                var nodoXml = doc.GetElementsByTagName("CodiceContratto")[0];
+                string codiceContratto = nodoXml.Attributes["path"].Value;
+                codiceContratto = System.IO.Path.GetFileNameWithoutExtension(codiceContratto);
+
+                string codiceLicenza = codiceContratto + "8858c0cfa1c3888ad816e62dc35afb484fe8c5b7";
+
+                if (Hash(codiceLicenza) == config.AppSettings.Settings["CodiceLicenza"].Value)
+                    return true;
+                else
+                    return false;
+            }          
+            catch(Exception ex)
+            {
+                log.ErrorFormat(ex.Message);
+                return false;
+            }
+
         }
     }
 }

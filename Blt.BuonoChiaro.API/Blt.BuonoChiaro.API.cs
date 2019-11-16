@@ -6,13 +6,11 @@ using System.Linq;
 using System.Text;
 using PMessageBox.Contract;
 using PMessageBox.Contract.Common;
-using PMessageBox.Kernel;
-using PMessageBox.Contract.Cliente;
 using PMessageBox.Contract.Conto;
 using HostPlugin;
 using Blt.BuonoChiaro.BOL;
 using System.Data;
-using PMessageBox.Contract.Buoni;
+using System.Configuration;
 
 namespace Blt.BuonoChiaro.API
 {
@@ -20,6 +18,16 @@ namespace Blt.BuonoChiaro.API
     [CanalePlugin(ContrattoConto.NomeContratto, false, true, true, false)]
     public class BltBuonoChiaro : IPlugin
     {
+        Configuration config;
+        public BltBuonoChiaro()
+        {
+            string exeConfigPath = typeof(BltBuonoChiaro).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
+
+        }
+
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public Messaggio RiceviMessaggio(Messaggio messaggio)
         {
@@ -27,44 +35,56 @@ namespace Blt.BuonoChiaro.API
             ContrattoConto conto = messaggio.Body.FirstOrDefault() as ContrattoConto;
             if (messaggio.Canale.Nome == ContrattoConto.NomeContratto)
             {
-                if (messaggio.ComandoEnum == EnumComando.InserimentoDati)
-                {
-                    //Riceve un conto in uno degli eventi dichiarati sul gestionale, 
-                    //imposta la promozione e restituisce il conto al gestionale
-                    //if(conto.Tool_IdTastoCustom == "BUONOCHIARO")
-                    switch(conto.Tool_Evento)
-                    {
-                        case EnumToolEvento.TastoCustom:
-                            switch(conto.Tool_IdTastoCustom)
-                            {
-                                case "BUONOCHIARO":
-                                    conto = InizioBuoniPasto(conto);
-                                    break;
-                                case "GESTIONECHIARO":
-                                    conto = SceltaAzioneBuonoChiaro(conto);
-                                    break;
-                                default:
-                                    conto = GestioneBuonoChiaro(conto);
-                                    break;
-                            }
-                            break;
-                        case EnumToolEvento.PreChiusura:
-                            break;
-                        case EnumToolEvento.PostChiusura:
-                                conto = ScriviBuonoChiaro(conto);
-                                //conto = ScriviBuonoPasto(conto);
-                            break;
-                        case EnumToolEvento.Annullamento:
-                            conto = AzzeraBuonoChiaro(conto);
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                conto = ComandoEsterno(conto);
             }
             Messaggio risposta = new Messaggio();
             risposta.Body.Add(conto);
             return risposta;
+        }
+
+        public ContrattoConto ComandoEsterno(ContrattoConto contrattoConto)
+        {
+            if (Helper.VerificaLicenza())
+            {
+                //Riceve un conto in uno degli eventi dichiarati sul gestionale, 
+                //imposta la promozione e restituisce il conto al gestionale
+                //if(conto.Tool_IdTastoCustom == "BUONOCHIARO")
+                switch (contrattoConto.Tool_Evento)
+                {
+                    case EnumToolEvento.TastoCustom:
+                        switch (contrattoConto.Tool_IdTastoCustom)
+                        {
+                            case "BUONOCHIARO":
+                                contrattoConto = InizioBuoniPasto(contrattoConto);
+                                break;
+                            case "GESTIONECHIARO":
+                                contrattoConto = SceltaAzioneBuonoChiaro(contrattoConto);
+                                break;
+                            default:
+                                contrattoConto = GestioneBuonoChiaro(contrattoConto);
+                                break;
+                        }
+                        break;
+                    case EnumToolEvento.PreChiusura:
+                        break;
+                    case EnumToolEvento.PostChiusura:
+                        contrattoConto = ScriviBuonoChiaro(contrattoConto);
+                        //conto = ScriviBuonoPasto(conto);
+                        break;
+                    case EnumToolEvento.Annullamento:
+                        contrattoConto = AnnullaScontrinoChiuso(contrattoConto);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+
+            {
+                contrattoConto.Tool_Domanda = "Errore Licenza non valida o non trovata";
+                contrattoConto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+            }
+            return contrattoConto;
         }
         public ContrattoConto SceltaAzioneBuonoChiaro(ContrattoConto conto)
         {
@@ -107,7 +127,7 @@ namespace Blt.BuonoChiaro.API
         {
             ParametriConto par;
             string buonoPasto = String.Empty;
-            BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             string a = "a";
             string b = "b";
             if (a == b)
@@ -143,7 +163,7 @@ namespace Blt.BuonoChiaro.API
                                     return ChiediAncora(conto);
                             }
                                 buonoPasto = conto.Tool_RispostaAScelta;
-                            /*if (par.Codici.Exists(c => c.CodiceABarre == buonoPasto) && Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["isGestisciDuplicatiLocalmente"]))
+                            /*if (par.Codici.Exists(c => c.CodiceABarre == buonoPasto) && Convert.ToBoolean(config.AppSettings.Settings["isGestisciDuplicatiLocalmente"].Value))
                             {
                                 par.Stato = StatoConto.erroreppt;
                                 return DoppioBuonoPasto(conto, buonoPasto);
@@ -215,7 +235,7 @@ namespace Blt.BuonoChiaro.API
                                     break;
                                 case "azzera":
                                     par.Stato = StatoConto.azzerascontrino;
-                                    return AnnullaScontrino(conto);
+                                    return AzzeraBuoniPastoScontrino(conto);
                                     break;
                                 case "supervisor":
                                     par.Stato = StatoConto.azzerabpinizio;
@@ -228,7 +248,7 @@ namespace Blt.BuonoChiaro.API
                             break;
                         case StatoConto.annullaBuonoPasto:
                             buonoPasto = conto.Tool_RispostaAScelta;
-                            return AnnullaBuonoChiaro(conto, buonoPasto);
+                            return AnnullaScontrinoChiuso(conto);
                         case StatoConto.azzerabpinizio:
                         case StatoConto.azzerabppassword:
                         case StatoConto.azzerabpscontrino:
@@ -243,7 +263,7 @@ namespace Blt.BuonoChiaro.API
 
                 }
             }
-            if (Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["isModalitaVeloce"]))
+            if (Convert.ToBoolean(config.AppSettings.Settings["isModalitaVeloce"].Value))
             {
                 if (par.Stato == StatoConto.inizio || par.Stato == StatoConto.leggi)
                 {
@@ -251,7 +271,7 @@ namespace Blt.BuonoChiaro.API
                     {
                         par.Stato = StatoConto.gestione;
                     }
-                    else if (Convert.ToInt32(System.Configuration.ConfigurationManager.AppSettings["MaxNumeroBuoni"]) <= par.Codici.Count)
+                    else if (Convert.ToInt32(config.AppSettings.Settings["MaxNumeroBuoni"].Value) <= par.Codici.Count)
                     {
                         par.Stato = StatoConto.massimobuoni;
                     }
@@ -329,7 +349,7 @@ namespace Blt.BuonoChiaro.API
                                     par = new ParametriConto();
                                     break;
                                 default:
-                                    if (conto.Tool_IdTastoCustom == System.Configuration.ConfigurationManager.AppSettings["IdTastoCustom"])
+                                    if (conto.Tool_IdTastoCustom == config.AppSettings.Settings["IdTastoCustom"].Value)
                                         return MassimoBuoni(conto);
                                     conto.Tool_Domanda = String.Format(HelperDizionario.domandaMassimobuoni, par.Codici.Count, par.GetTotale());
                                     conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
@@ -339,7 +359,7 @@ namespace Blt.BuonoChiaro.API
                         }
                         break;
                     case StatoConto.massimoraggiunto:
-                        if (conto.Tool_IdTastoCustom == System.Configuration.ConfigurationManager.AppSettings["IdTastoCustom"])
+                        if (conto.Tool_IdTastoCustom == config.AppSettings.Settings["IdTastoCustom"].Value)
                             return MassimoBuoni(conto);
                         conto.Tool_Domanda = string.Format(HelperDizionario.domandaMassimoraggiunto, conto.TotaleDaPagare, par.GetTotale());
                         conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
@@ -386,12 +406,14 @@ namespace Blt.BuonoChiaro.API
             log.DebugFormat("Chiudi Scontrino BuonoChiaro - Conto: {0} - Operatore: {1} - Cassa/Tavolo: {2} - Reparto/Sala: {3} - Totale Conto: {4}", conto.IdGestionale, conto.CassiereLogin, conto.PuntoCassa, conto.Reparto, conto.TotaleDaPagare);
             ParametriConto par = new ParametriConto(conto);
             conto.Tool_Parametri = new object[1];
-            BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+            if (Convert.ToBoolean(config.AppSettings.Settings["isDebugScontrino"].Value))
+                conto.NumeroScontrinoFiscale = conto.DataGestione.Value.Day.ToString("0000") + "-" + conto.IdGestionale.Value.ToString("000000");
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             var res = bcDb.ChiudiTicket(conto);
             if(res.RISULTATO == enumCOMRES.OK)
             {
-                foreach (var file in System.IO.Directory.GetFiles(System.Configuration.ConfigurationManager.AppSettings["LogPath"], "*" + conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "*"))
-                    System.IO.File.Move(file, System.IO.Path.Combine(System.Configuration.ConfigurationManager.AppSettings["SuccessFolder"], System.IO.Path.GetFileName(file)));
+                foreach (var file in System.IO.Directory.GetFiles(config.AppSettings.Settings["LogPath"].Value, "*" + conto.DataGestione.Value.ToString("yyMMdd") + "_" + conto.IdGestionale + "*"))
+                    System.IO.File.Move(file, System.IO.Path.Combine(config.AppSettings.Settings["SuccessFolder"].Value, System.IO.Path.GetFileName(file)));
             }
             else
             {
@@ -417,7 +439,7 @@ namespace Blt.BuonoChiaro.API
                 case StatoConto.azzerabppassword:
                     if(!String.IsNullOrEmpty(conto.Tool_RispostaAScelta))
                     {
-                        if(conto.Tool_RispostaAScelta == "blt.1980")
+                        if(conto.Tool_RispostaAScelta == config.AppSettings.Settings["PasswordVoid"].Value)
                         {
                             conto.Tool_TipoDomanda = EnumToolTipoDomanda.Input;
                             conto.Tool_Domanda = HelperDizionario.domanda("azzerabppassword");
@@ -444,9 +466,10 @@ namespace Blt.BuonoChiaro.API
                 case StatoConto.azzerabpscontrino:
                     if (!String.IsNullOrEmpty(conto.Tool_RispostaAScelta))
                     {
-                        BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+                        Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
                         //ParametriConto par = new ParametriConto(conto);
                         par.IdConto = Convert.ToInt32(conto.Tool_RispostaAScelta);
+                        //par.idScontrinoElettronico = conto.Tool_RispostaAScelta;
                         par.Stato = StatoConto.azzerabpbuono;
                         conto.Tool_TipoDomanda = EnumToolTipoDomanda.Input;
                         conto.Tool_Domanda = HelperDizionario.domanda("azzerabpbuono");
@@ -465,10 +488,11 @@ namespace Blt.BuonoChiaro.API
                 case StatoConto.azzerabpbuono:
                     if (!String.IsNullOrEmpty(conto.Tool_RispostaAScelta))
                     {
-                        BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+                        Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
                         //ParametriConto par = new ParametriConto(conto);
                         par.Codici.Add(new BuonoPasto() { CodiceABarre = conto.Tool_RispostaAScelta });
                         par.Stato = StatoConto.azzerabpesegui;
+                        //var res = bcDb.AnnullaTicketChiuso(conto, par.idScontrinoElettronico, par.Codici[0].CodiceABarre);              
                         var res = bcDb.AnnullaTicketChiuso(conto, par.IdConto.ToString(), par.Codici[0].CodiceABarre);
                         if (res.RISULTATO == enumCOMRES.OK)
                         {
@@ -506,7 +530,17 @@ namespace Blt.BuonoChiaro.API
             }
             return conto;
         }
-        public ContrattoConto AnnullaScontrino(ContrattoConto conto)
+        public ContrattoConto AnnullaScontrinoChiuso(ContrattoConto conto)
+        {
+
+            if (conto.Pagamenti.Any(p => p.Tipo.Codice == config.AppSettings.Settings["CodicePagamento"].Value))
+            {
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+                conto.Tool_Domanda = "Azzerare manualmente i buoni pasto tramite la gestione SupervisorVoid";
+            }
+            return conto;
+        }
+        public ContrattoConto AzzeraBuoniPastoScontrino(ContrattoConto conto)
         {
             ParametriConto par = new ParametriConto(conto);
             if (par.Stato != StatoConto.annullaBuonoPasto)
@@ -514,7 +548,7 @@ namespace Blt.BuonoChiaro.API
 
             Boolean result = true;
             List<String> Barcodes = new List<string>();
-            BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             if (!String.IsNullOrEmpty(par.idBuonoChiaro))
             {
                 List<string> codici = par.Codici.Select(b => b.CodiceABarre).ToList();
@@ -570,9 +604,12 @@ namespace Blt.BuonoChiaro.API
             {
                 case "":
                 case null:
-                    conto.Tool_TipoDomanda = EnumToolTipoDomanda.Input;
-                    conto.Tool_Domanda = HelperDizionario.domanda("annullaBuonoPasto");
-                    par.Stato = StatoConto.annullaBuonoPasto;
+                    if (par.Stato != StatoConto.annullaBuonoPasto)
+                    {
+                        conto.Tool_TipoDomanda = EnumToolTipoDomanda.Input;
+                        conto.Tool_Domanda = HelperDizionario.domanda("annullaBuonoPasto");
+                        par.Stato = StatoConto.annullaBuonoPasto;
+                    }
                     conto = par.ToConto(conto);
                     return conto;
                 case "annulla":
@@ -582,7 +619,7 @@ namespace Blt.BuonoChiaro.API
                     return par.ToConto(conto);
                 case "riprova":
                 default:
-                    BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+                    Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
                     if (!String.IsNullOrEmpty(buonoPasto))
                     {
                         var resA = bcDb.AnnullaTicket(conto, buonoPasto);
@@ -623,7 +660,7 @@ namespace Blt.BuonoChiaro.API
                 return conto;
             }
 
-            BuonoChiaro.DAL.BuonoChiaroDb bcDb = new DAL.BuonoChiaroDb();
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             log.InfoFormat("Apro Ticket Buono Chiaro - Conto: {0} - Operatore: {1} - Cassa/Tavolo: {2} - Reparto/Sala: {3} - Totale Conto: {4}", conto.IdGestionale, conto.CassiereLogin, conto.PuntoCassa, conto.Reparto, conto.TotaleDaPagare);
             var res = bcDb.ApriTicket(conto);
             if (res.RISULTATO == enumCOMRES.OK)
@@ -645,17 +682,17 @@ namespace Blt.BuonoChiaro.API
             return conto;
 
         }
-        public ContrattoConto DoppioBuonoPasto(ContrattoConto conto, string buonoPasto)
-        {
-            var par = new ParametriConto(conto);
-            string domanda = String.Format(HelperDizionario.domandaErroreppt, buonoPasto, par.GetTotale());
-            par.UltimaDomanda = conto.Tool_Domanda = domanda;
-            conto.Tool_TipoDomanda = EnumToolTipoDomanda.SiNoAnnulla;
-            par.Stato = StatoConto.erroreppt;
-            conto = par.ToConto(conto);
-            return conto;
+        //public ContrattoConto DoppioBuonoPasto(ContrattoConto conto, string buonoPasto)
+        //{
+        //    var par = new ParametriConto(conto);
+        //    string domanda = String.Format(HelperDizionario.domandaErroreppt, buonoPasto, par.GetTotale());
+        //    par.UltimaDomanda = conto.Tool_Domanda = domanda;
+        //    conto.Tool_TipoDomanda = EnumToolTipoDomanda.SiNoAnnulla;
+        //    par.Stato = StatoConto.erroreppt;
+        //    conto = par.ToConto(conto);
+        //    return conto;
 
-        }
+        //}
         public ContrattoConto LeggiBuoniPasto(ContrattoConto conto)
         {
             var par = new ParametriConto(conto);
@@ -698,14 +735,9 @@ namespace Blt.BuonoChiaro.API
         public ContrattoConto ScriviPagamento(ContrattoConto conto, ParametriConto par)
         {
             Decimal buonipasto = par.GetTotale();
-            if (buonipasto == 0)
-                return conto;
+            //if (buonipasto == 0 && (conto.Tool_Domanda != HelperDizionario.domanda("annullabpok") || conto.Tool_Domanda == HelperDizionario.domanda("annullascontrinook")))
+                //return conto;
             string pIvaEmettitore = String.Empty;
-            if (Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["IsDecodificaEmettitori"]))
-            {
-
-            }
-            
 
             //var pg = conto.Pagamenti; // = new frwbo2.OggettoEntitaCollection<PMBRigaPagamento>();
             foreach (var p in conto.Pagamenti)
@@ -713,40 +745,22 @@ namespace Blt.BuonoChiaro.API
                 p.Importo = 0;
                 p.ListaBuoni = new List<PMBRigaPagamento.BuonoPastoXPagamento>();
             }
-            /*
-            PMBRigaPagamento pagamento = new PMBRigaPagamento();
 
-            pagamento.Numero = 1;
-                    pagamento.Importo = par.GetTotale();
-                    pagamento.Tipo = new PMBTipoPagamento() { Categoria = par.CategoriaPagamento, Codice = par.CodicePagamento };
-                    pagamento.ListaBuoni = new List<PMBRigaPagamento.BuonoPastoXPagamento>();
-            foreach (var pag in par.Codici)
-            {
-                pagamento.ListaBuoni.Add(new PMBRigaPagamento.BuonoPastoXPagamento() {
-                    Buono = pag.Fornitore,
-                    BuonoAgenziaPIVA = pIvaEmettitore,// par.Codici.First().CodiceABarre,
-                    BuonoValore = 0,
-                    BuonoValoreRimborsato = 0,
-                    Importo = pag.Valore,
-                    Numero = 1
-                });
-            }
-            conto.Pagamenti.Add(pagamento);
-            */
             var pag = conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento).ToList();
             if(pag.Count > 0 && !par.Codici.Select(c=>c.CodiceABarre).All(c=> pag.First().ListaBuoni.Any(b=>b.Buono == c)))
             {
                 foreach(var c in par.Codici)
                 {
-                    if(!pag.First().ListaBuoni.Any(b=>b.Buono == c.CodiceABarre))
-                    {
+                    //if(!pag.First().ListaBuoni.Any(b=>b.Buono == c.CodiceABarre))
+                    //{
                         conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento && p.Tipo.Codice == par.CodicePagamento).First().ListaBuoni.Add(
                             new PMBRigaPagamento.BuonoPastoXPagamento()
                             { Buono = c.Fornitore, BuonoValoreRimborsato = 0, BuonoAgenziaPIVA = pIvaEmettitore, BuonoValore = 0, Importo = c.Valore, Numero = 1});
-                    }
+                        conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento && p.Tipo.Codice == par.CodicePagamento).First().Importo += c.Valore;
+                    //}
                 }
             }
-            else
+            else if(par.Codici.Count > 0)
             {
                 conto.Pagamenti.Add(
                     new PMBRigaPagamento()
@@ -767,13 +781,17 @@ namespace Blt.BuonoChiaro.API
                     });
 
             }
+            else if(par.Codici.Count == 0 && pag.Count != 0)
+            {
+
+            }
             if(par.GetTotale() <= conto.TotaleDaPagare )
             {
-                conto.Pagamenti.First(p => p.Tipo.Categoria.ToLower() == "contanti").Importo = conto.TotaleDaPagare.Value - par.GetTotale();
+                conto.Pagamenti.First(p => p.Tipo.Categoria != "BuonoPasto").Importo = conto.TotaleDaPagare.Value - par.GetTotale();
             }
             else
             {
-                conto.Pagamenti.First(p => p.Tipo.Categoria == "BuonoSconto").Importo = par.GetTotale()- conto.TotaleDaPagare.Value;
+                //conto.Pagamenti.First(p => p.Tipo.Categoria == "BuonoSconto").Importo = par.GetTotale()- conto.TotaleDaPagare.Value;
             }
             int n = 2;
             for(int p=0; p< conto.Pagamenti.Count; p++)
@@ -788,211 +806,7 @@ namespace Blt.BuonoChiaro.API
                     n++;
                 }
             }
-            #region GESTIONE BUONI PASTO DA FATTURARE
-
-            /*
-            if (!Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["isGestisciComeIncassati"]))
-            #region GESTIONE COME INCASSATI
-            {
-                
-                if (conto.Pagamenti.Count != 0)
-                {
-                    if (conto.Pagamenti.Where(pg => pg.Tipo.Categoria != par.CategoriaPagamento).Sum(pg => pg.Importo) + buonipasto > conto.TotaleDaPagare)
-                    {
-                        Decimal residuo = (Decimal)(conto.Pagamenti.Where(pg => pg.Tipo.Categoria != par.CategoriaPagamento).Sum(pg => pg.Importo) + buonipasto - conto.TotaleDaPagare);
-                        foreach (var pagamento in conto.Pagamenti)
-                        {
-                            if (pagamento.Tipo.Categoria == par.CategoriaPagamento)
-                            {
-                                isBuoniPastoInserito = true;
-                                pagamento.Importo = buonipasto;
-                                pagamento.Numero = 2;
-                                par.CodicePagamento = pagamento.Tipo.Codice;
-                            }
-                            else
-                            {
-                                if (residuo > 0)
-                                {
-                                    if (pagamento.Importo >= residuo)
-                                    {
-                                        pagamento.Importo = pagamento.Importo - residuo;
-                                        residuo = 0;
-                                    }
-                                    else
-                                    {
-                                        residuo = residuo - pagamento.Importo;
-                                        pagamento.Importo = 0;
-                                    }
-                                    if (pagamento.Numero == 2)
-                                    {
-                                        pagamento.Numero = conto.Pagamenti.Where(pg => pg.Tipo.Categoria != par.CategoriaPagamento).Max(b => b.Numero);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (conto.Pagamenti.Any(p => p.Tipo.Categoria == par.CategoriaPagamento))
-                    {
-                        var p = conto.Pagamenti.First(pg => pg.Tipo.Categoria == par.CategoriaPagamento);
-                        p.Importo = par.GetTotale();
-                        p.Numero = 2;
-
-
-                        //return conto;
-                    }
-                    if (conto.Pagamenti.Count > 1)
-                    {
-                        foreach (var p in conto.Pagamenti)
-                        {
-                            if (p.Numero > 1)
-                            {
-
-                            }
-                        }
-                    }
-                }
-            }
-            #endregion
-            else
-            {
-                if (conto.Pagamenti.Count != 0)
-                {
-                    if (conto.Pagamenti.Where(pg => pg.Tipo.Categoria != par.CategoriaPagamento).Sum(pg => pg.Importo) + buonipasto > conto.TotaleDaPagare)
-                    {
-                        Decimal residuo = (Decimal)(conto.Pagamenti.Where(pg => pg.Tipo.Codice != par.CodicePagamento).Sum(pg => pg.Importo) + buonipasto - conto.TotaleDaPagare);
-                        foreach (var pagamento in conto.Pagamenti)
-                        {
-                            if (pagamento.Tipo.Codice == par.CodicePagamento)
-                            {
-                                isBuoniPastoInserito = true;
-                                pagamento.Importo = buonipasto;
-                                pagamento.Numero = 2;
-                            }
-                            else
-                            {
-                                if (residuo > 0)
-                                {
-                                    if (pagamento.Importo >= residuo)
-                                    {
-                                        pagamento.Importo = pagamento.Importo - residuo;
-                                        residuo = 0;
-                                    }
-                                    else
-                                    {
-                                        residuo = residuo - pagamento.Importo;
-                                        pagamento.Importo = 0;
-                                    }
-                                    if (pagamento.Numero == 2)
-                                    {
-                                        pagamento.Numero = conto.Pagamenti.Where(pg => pg.Tipo.Codice != par.CodicePagamento).Max(b => b.Numero);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (conto.Pagamenti.Any(p => p.Tipo.Codice == par.CodicePagamento))
-                    {
-                        var p = conto.Pagamenti.First(pg => pg.Tipo.Codice == par.CodicePagamento);
-                        p.Importo = par.GetTotale();
-                        p.Numero = 2;
-
-
-                        //return conto;
-                    }
-                    if (conto.Pagamenti.Count > 1)
-                    {
-                        foreach (var p in conto.Pagamenti)
-                        {
-                            if (p.Numero > 1)
-                            {
-
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!isBuoniPastoInserito)
-            {
-                PMBRigaPagamento pag = new PMBRigaPagamento();
-                PMBTipoPagamento tipo = new PMBTipoPagamento();
-                tipo.Categoria = par.CategoriaPagamento;
-                tipo.Codice = par.CodicePagamento;
-                pag.Numero = 2;
-                pag.Tipo = tipo;
-                pag.Importo = par.GetTotale();
-                pag.ListaBuoni.Add(new PMBRigaPagamento.BuonoPastoXPagamento() { Buono });
-                conto.Pagamenti.Add(pag);
-            }
-
-            if(conto.TotaleDaPagare < par.GetTotale() && Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["isAbilitaResto"]))
-            {
-                conto = CreaBuonoSconto(conto);                
-            }
-            conto = par.ToConto(conto);*/
-            #endregion
             return conto;
-        }
-        public ContrattoConto AzzeraPagamento(ContrattoConto conto)
-        {
-            return conto;
-        }
-        public ContrattoConto ScriviBuonoPasto(ContrattoConto conto)
-        {
-            ParametriConto par = new ParametriConto(conto);
-            if (par.GetTotale() > 0)
-            {
-                string strSQL = @"  SELECT Pagamento.id 
-                                FROM Pagamento 
-                                INNER JOIN TipoPagamento ON idTipoPagamento = TipoPagamento.id 
-                                WHERE Pagamento.idConto = @param0 AND TipoPagamento.nome = @param1 AND Pagamento.importo = @param2";
-                DataTable dt = Blt.BuonoChiaro.BOL.Helper.SqlSelect(strSQL, new object[] { conto.IdGestionale, par.CodicePagamento, par.GetTotale() });
-                if (dt.Rows.Count == 1)
-                {
-                    foreach (var b in par.GetRiepilogo())
-                    {
-                        string strSQLInsert = @"INSERT INTO BuonoPastoXPagamento
-                                        (selettore, utenteCreazione, dataCreazione, utenteUltimaModifica, dataUltimaModifica, timeStmp, idBuonoPasto, idPagamento, numero, isIncassato, importo)
-                                        VALUES ( 'MetaBuonoPastoXPagamento', 1, GETDATE(),1,GETDATE(),1,@param0,@param1,@param2,'False',@param3)";
-                        string idPagamento = dt.Rows[0][0].ToString();
-                        string idBuonoPasto = System.Configuration.ConfigurationManager.AppSettings["idBuonoPasto"];
-                        //string numero = "1";
-                        var res = Helper.SqlInsert(strSQLInsert, new object[] { idBuonoPasto, idPagamento, b.CodiceABarre, b.Valore });
-                        if (res != 1)
-                        {
-                            conto.Tool_Domanda = "Errore in registrazione Buono Pasto";
-                            conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
-                            break;
-                        }
-                    }
-                }
-            }
-            return conto;
-        }
-        public ContrattoConto CreaBuonoSconto(ContrattoConto conto)
-        {
-            ParametriConto par = new ParametriConto(conto);
-            ContrattoBuonoSconto buono = new ContrattoBuonoSconto();
-            buono.Importo = par.GetTotale() - conto.TotaleDaPagare.Value;
-            buono.Codice = conto.IdGestionale.Value;
-            buono.DataCreazione = DateTime.Now;
-            buono.DataUltimaModifica = DateTime.Now;
-            //Spire.Barcode.BarcodeSettings bcsett = new Spire.Barcode.BarcodeSettings();
-            //bcsett.Type = Spire.Barcode.BarCodeType.EAN13;
-            //bcsett.UseChecksum = Spire.Barcode.CheckSumMode.ForceEnable;
-            //bcsett.Data = "95" + conto.IdGestionale.Value.ToString().PadLeft(10, '0');
-            
-            //Spire.Barcode.BarCodeGenerator bc = new Spire.Barcode.BarCodeGenerator(bcsett);
-            //bc.ToString();
-            string code = "95" + conto.IdGestionale.Value.ToString().PadLeft(10, '0');
-            buono.CodiceABarre = code + _checksum_ean13(code).ToString();
-            buono.Descrizione = "Tallon";
-            buono.Emissione = conto.DataGestione.Value;
-            //buono.Scadenza = conto.DataGestione.Value.AddMonths(6);
-            buono.TipoEnum = TipoBuonoSconto.ScontoEuro;
-            conto.BuonoDaEmettere = buono;
-            return conto;
-
         }
         public ContrattoConto ErroreApriTicket(ContrattoConto conto, TicketOpenRes response)
         {
@@ -1023,7 +837,7 @@ namespace Blt.BuonoChiaro.API
         {
             if (conto.TotaleDaPagare <= par.GetTotale())
             {
-                conto.Tool_Domanda = HelperDizionario.domanda("massimoraggiunto", par.Codici.Count, par.GetTotale());
+                conto.Tool_Domanda = HelperDizionario.domanda("massimoraggiunto", conto.TotaleDaPagare, par.GetTotale());
                 conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
                 par.Stato = StatoConto.fine;
                 conto = par.ToConto(conto);
@@ -1039,7 +853,7 @@ namespace Blt.BuonoChiaro.API
         }
         public Boolean ControllaSuperatoMassimoNumero(ContrattoConto conto, ParametriConto par, out ContrattoConto Rconto)
         {
-            if (Convert.ToInt32(System.Configuration.ConfigurationManager.AppSettings["MaxNumeroBuoni"]) <= par.Codici.Count)
+            if (Convert.ToInt32(config.AppSettings.Settings["MaxNumeroBuoni"].Value) <= par.Codici.Count)
             {
                 conto.Tool_Domanda = HelperDizionario.domanda("massimoraggiunto", conto.TotaleDaPagare, par.GetTotale());
                 conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;

@@ -46,22 +46,29 @@ namespace Blt.BuonoChiaro.BOL
         [XmlElement("NUMOP")]
         public string Progressivo { get; set; }
 
+        Configuration config;
         public ParentReq()
         {
+            string exeConfigPath = typeof(ParentReq).Assembly.Location;
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(exeConfigPath), "buonochiaro.config");
+            config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
         }
+
         public void Init(ContrattoConto conto)
         {
-            this.IndirizzoIp = System.Configuration.ConfigurationManager.AppSettings["IP"];
-            this.Port = System.Configuration.ConfigurationManager.AppSettings["PORT"];
-            this.Timeout = System.Configuration.ConfigurationManager.AppSettings["TIMEOUT"];
-            this.CodiceIdentificativo = System.Configuration.ConfigurationManager.AppSettings["IDAWS"];
-            this.CODCORP = System.Configuration.ConfigurationManager.AppSettings["CODCORP"];
-            this.CodiceTransazione = System.Configuration.ConfigurationManager.AppSettings["CODTR"];
+            this.IndirizzoIp = config.AppSettings.Settings["IP"].Value;
+            this.Port = config.AppSettings.Settings["PORT"].Value;
+            this.Timeout = config.AppSettings.Settings["TIMEOUT"].Value;
+            this.CodiceIdentificativo = config.AppSettings.Settings["IDAWS"].Value;
+            this.CODCORP = config.AppSettings.Settings["CODCORP"].Value;
+            this.CodiceTransazione = config.AppSettings.Settings["CODTR"].Value;
 
-            this.CODDEV = (10000 + Convert.ToInt32(System.Configuration.ConfigurationManager.AppSettings["CODDEV"].PadLeft(5, '0'))).ToString() + conto.PuntoCassa.PadLeft(5, '0');
+            this.CODDEV = (10000 + Convert.ToInt32(config.AppSettings.Settings["CODDEV"].Value.PadLeft(5, '0'))).ToString() + conto.PuntoCassa.PadLeft(5, '0');
             this.CODPIC = conto.CassiereLogin;
+            //this.NumeroScontrino = conto.NumeroScontrinoFiscale;
             this.NumeroScontrino = conto.IdGestionale.Value.ToString();
-            this.Progressivo = conto.IDDati;
+            this.Progressivo = conto.IdGestionale.Value.ToString();
         }
 
         public string ToXML()
@@ -367,11 +374,13 @@ namespace Blt.BuonoChiaro.BOL
 
     public static class HelperDizionario
     {
+
         public static string rispostaToKey(string tipo, string valore)
         {
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
             String risposta = valore;
             XmlDocument doc = new XmlDocument();
-            doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioSceltaAzioni"]);
+            doc.Load(config.AppSettings.Settings["dizionarioSceltaAzioni"].Value);
             var nodes = doc.DocumentElement.SelectNodes(tipo);
             if (nodes != null && nodes.Count > 0)
             {
@@ -387,9 +396,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 Dictionary<string, string> domandaSceltaAzione = new Dictionary<string, string>();
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioSceltaAzioni"]);
+                doc.Load(config.AppSettings.Settings["dizionarioSceltaAzioni"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("SceltaAzione");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -405,7 +415,8 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
-                var doc = XDocument.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioErroreAnnullamento"]);
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
+                var doc = XDocument.Load(config.AppSettings.Settings["dizionarioErroreAnnullamento"].Value);
                 var rootNodes = doc.Root.DescendantNodes().OfType<XElement>();
                 return rootNodes.ToDictionary(n => n.Name.ToString(), n => n.Value);
             }
@@ -414,9 +425,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -433,9 +445,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -452,9 +465,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -471,9 +485,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -490,9 +505,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -509,9 +525,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -528,9 +545,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -547,9 +565,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -566,9 +585,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -585,9 +605,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -604,9 +625,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -623,9 +645,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -642,9 +665,10 @@ namespace Blt.BuonoChiaro.BOL
         {
             get
             {
+                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
                 string domandaSceltaAzione = String.Empty;
                 XmlDocument doc = new XmlDocument();
-                doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+                doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
                 var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
                 if (nodes != null && nodes.Count > 0)
                 {
@@ -660,9 +684,10 @@ namespace Blt.BuonoChiaro.BOL
 
         public static string domanda(string domanda, params object[] parameters)
         {
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
             string domandaSceltaAzione = String.Empty;
             XmlDocument doc = new XmlDocument();
-            doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioDomande"]);
+            doc.Load(config.AppSettings.Settings["dizionarioDomande"].Value);
             var nodes = doc.DocumentElement.SelectNodes("TestoDomanda");
             if (nodes != null && nodes.Count > 0)
             {
@@ -678,9 +703,10 @@ namespace Blt.BuonoChiaro.BOL
         }
         public static Dictionary<string, string> risposte(string domanda)
         {
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
             Dictionary<string, string> domandaSceltaAzione = new Dictionary<string, string>();
             XmlDocument doc = new XmlDocument();
-            doc.Load(System.Configuration.ConfigurationManager.AppSettings["dizionarioSceltaAzioni"]);
+            doc.Load(config.AppSettings.Settings["dizionarioSceltaAzioni"].Value);
             var nodes = doc.DocumentElement.SelectNodes(domanda);
             if (nodes != null && nodes.Count > 0)
             {
