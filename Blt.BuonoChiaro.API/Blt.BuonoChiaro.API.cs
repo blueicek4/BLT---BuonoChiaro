@@ -46,20 +46,33 @@ namespace Blt.BuonoChiaro.API
         {
             if (Helper.VerificaLicenza())
             {
-                //Riceve un conto in uno degli eventi dichiarati sul gestionale, 
-                //imposta la promozione e restituisce il conto al gestionale
-                //if(conto.Tool_IdTastoCustom == "BUONOCHIARO")
-                switch (contrattoConto.Tool_Evento)
+                string tastoCustom = contrattoConto.Tool_IdTastoCustom;
+                enumTastoCustom azione;
+                if (string.IsNullOrEmpty(tastoCustom))
+                    azione = enumTastoCustom.idDefault;
+                else if (tastoCustom == config.AppSettings.Settings["IdTastoCustom"].Value)
+                    azione = enumTastoCustom.idBuonoCartaceo;
+                else if (tastoCustom == config.AppSettings.Settings["IdTastoPos"].Value)
+                    azione = enumTastoCustom.idBuonoPos;
+                else if (tastoCustom == config.AppSettings.Settings["IdTastoSetup"].Value)
+                    azione = enumTastoCustom.idGestione;
+                else
+                    azione = enumTastoCustom.idDefault;
+
+                    switch (contrattoConto.Tool_Evento)
                 {
                     case EnumToolEvento.TastoCustom:
-                        switch (contrattoConto.Tool_IdTastoCustom)
+                        switch (azione)
                         {
-                            case "BUONOCHIARO":
+                            case enumTastoCustom.idBuonoCartaceo:
                                 contrattoConto = InizioBuoniPasto(contrattoConto);
                                 break;
-                            case "GESTIONECHIARO":
+                            case enumTastoCustom.idBuonoPos:
+                                break;
+                            case enumTastoCustom.idGestione:
                                 contrattoConto = SceltaAzioneBuonoChiaro(contrattoConto);
                                 break;
+                            case enumTastoCustom.idDefault:
                             default:
                                 contrattoConto = GestioneBuonoChiaro(contrattoConto);
                                 break;
@@ -406,8 +419,6 @@ namespace Blt.BuonoChiaro.API
             log.DebugFormat("Chiudi Scontrino BuonoChiaro - Conto: {0} - Operatore: {1} - Cassa/Tavolo: {2} - Reparto/Sala: {3} - Totale Conto: {4}", conto.IdGestionale, conto.CassiereLogin, conto.PuntoCassa, conto.Reparto, conto.TotaleDaPagare);
             ParametriConto par = new ParametriConto(conto);
             conto.Tool_Parametri = new object[1];
-            if (Convert.ToBoolean(config.AppSettings.Settings["isDebugScontrino"].Value))
-                conto.NumeroScontrinoFiscale = conto.DataGestione.Value.Day.ToString("0000") + "-" + conto.IdGestionale.Value.ToString("000000");
             Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             var res = bcDb.ChiudiTicket(conto);
             if(res.RISULTATO == enumCOMRES.OK)
