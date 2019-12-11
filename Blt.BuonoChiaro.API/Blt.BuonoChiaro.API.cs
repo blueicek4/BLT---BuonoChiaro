@@ -261,7 +261,7 @@ namespace Blt.BuonoChiaro.API
                             break;
                         case StatoConto.annullaBuonoPasto:
                             buonoPasto = conto.Tool_RispostaAScelta;
-                            return AnnullaScontrinoChiuso(conto);
+                            return AnnullaBuonoChiaro(conto, buonoPasto);
                         case StatoConto.azzerabpinizio:
                         case StatoConto.azzerabppassword:
                         case StatoConto.azzerabpscontrino:
