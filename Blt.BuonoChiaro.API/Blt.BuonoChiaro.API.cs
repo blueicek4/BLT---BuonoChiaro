@@ -11,6 +11,8 @@ using HostPlugin;
 using Blt.BuonoChiaro.BOL;
 using System.Data;
 using System.Configuration;
+using GatewayPos;
+using System.Xml;
 
 namespace Blt.BuonoChiaro.API
 {
@@ -68,6 +70,7 @@ namespace Blt.BuonoChiaro.API
                                 contrattoConto = InizioBuoniPasto(contrattoConto);
                                 break;
                             case enumTastoCustom.idBuonoPos:
+                                contrattoConto = PagamentoBuonoChiaroElettronico(contrattoConto);
                                 break;
                             case enumTastoCustom.idGestione:
                                 contrattoConto = SceltaAzioneBuonoChiaro(contrattoConto);
@@ -117,17 +120,21 @@ namespace Blt.BuonoChiaro.API
                 enumSceltaAzione enumSA = (enumSceltaAzione)Enum.Parse(typeof(enumSceltaAzione), domSceltaAzione.Key);
                 switch(enumSA)
                 {
-                    case enumSceltaAzione.leggi:
+                    case enumSceltaAzione.leggiCartaceo:
                         par.Stato = StatoConto.leggi;
                         conto = par.ToConto(conto);
                         return GestioneBuonoChiaro(conto);
-                    case enumSceltaAzione.annulla:
+                    case enumSceltaAzione.annullaCartaceo:
                         return AnnullaBuonoChiaro(conto, null);
-                    case enumSceltaAzione.azzera:
+                    case enumSceltaAzione.azzeraCartaceo:
                         return AzzeraBuonoChiaro(conto);
-                    case enumSceltaAzione.supervisor:
-
+                    case enumSceltaAzione.supervisorCartaceo:
                         break;
+                    case enumSceltaAzione.buonoPos:
+                        par.Stato = StatoConto.leggi;
+                        conto = par.ToConto(conto);
+                        return GestioneBuonoChiaro(conto);
+
                     default:
                         break;
                 }
@@ -136,6 +143,60 @@ namespace Blt.BuonoChiaro.API
             return conto;
         }
 
+        public ContrattoConto PagamentoBuonoChiaroElettronico(ContrattoConto conto)
+        {
+            ParametriConto par;
+            string buonoPasto = String.Empty;
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
+
+            if (conto.Tool_Parametri == null)
+            {
+                return InizioBuoniPasto(conto);
+            }
+            else
+            {
+                par = new ParametriConto(conto);
+                par.Totale = conto.TotaleDaPagare;
+                GatewayPos.POSPaymentRequest posReq = new POSPaymentRequest()
+                { applicationSender = "BLUETECH"
+                    , ReferenceNumber = conto.IdGestionale.Value
+                    , requestID = conto.IdGestionale.Value
+                    , transactionNumber = conto.IdGestionale.Value
+                    , totalAmount = conto.TotaleDaPagare.Value
+                    , workstationID = conto.PuntoCassa
+                };
+                GatewayPos.Gateway gw = new Gateway();
+                gw.StartServer();
+                var response = gw.Pay(posReq);
+
+                if(response.success)
+                {
+                    XmlDocument respXml = new XmlDocument();
+                    respXml.LoadXml(response.XML);
+                    BuonoPasto bp = new BuonoPasto();
+                    bp.Valore = response.totalAmount;
+                    bp.Fornitore = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@AcquirerID").Value;
+                    bp.CodiceTransazione = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@ApprovalCode").Value;
+                    bp.CodiceABarre = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@CardPAN").Value;
+
+                    par.AggiungiBuono(bp);
+                    conto = par.ToConto(conto);
+                    conto.Tool_Domanda = String.Format("Ricevuto Pagamento per {0} €", bp.Valore);
+                    conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+                    return ScriviPagamento(conto, par);
+
+                }
+                else
+                {
+                    conto.Tool_Domanda = "Errore nella transazione";
+                    conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+                }
+
+            }
+
+
+                return conto;
+        }
         public ContrattoConto GestioneBuonoChiaro(ContrattoConto conto)
         {
             ParametriConto par;

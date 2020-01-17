@@ -58,38 +58,45 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\FastReflectionLib.dll</HintPath>
     </Reference>
-    <Reference Include="frwbo, Version=2018.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwbo, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\frwbo.dll</HintPath>
     </Reference>
-    <Reference Include="frwbo2, Version=2018.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwbo2, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\frwbo2.dll</HintPath>
     </Reference>
-    <Reference Include="frwboCommon, Version=2018.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwboCommon, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\frwboCommon.dll</HintPath>
     </Reference>
-    <Reference Include="FrwMx, Version=2.7.5.1, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwComFacGui">
+      <HintPath>..\External\frwComFacGui.dll</HintPath>
+    </Reference>
+    <Reference Include="frwdata">
+      <HintPath>..\External\frwdata.dll</HintPath>
+    </Reference>
+    <Reference Include="FrwMx, Version=2.7.9.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\FrwMx.dll</HintPath>
     </Reference>
-    <Reference Include="frwsys, Version=2018.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwsys, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\frwsys.dll</HintPath>
     </Reference>
-    <Reference Include="frwsys2, Version=2018.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwsys2, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\frwsys2.dll</HintPath>
     </Reference>
-    <Reference Include="frwsys2.XmlSerializers, Version=2018.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwsys2.XmlSerializers, Version=2018.8.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\frwsys2.XmlSerializers.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\External\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="MessageBox">
+    <Reference Include="MessageBox, Version=5.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\MessageBox.dll</HintPath>
     </Reference>
     <Reference Include="System" />

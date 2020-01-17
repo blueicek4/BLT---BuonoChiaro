@@ -51,6 +51,9 @@
     <Reference Include="frwbo2">
       <HintPath>..\External\frwbo2.dll</HintPath>
     </Reference>
+    <Reference Include="GatewayPos">
+      <HintPath>..\..\GatewayPos\GatewayPos\bin\Debug\GatewayPos.dll</HintPath>
+    </Reference>
     <Reference Include="HostPlugin">
       <HintPath>..\External\HostPlugin.dll</HintPath>
     </Reference>

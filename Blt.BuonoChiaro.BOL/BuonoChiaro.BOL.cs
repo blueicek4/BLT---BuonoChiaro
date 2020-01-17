@@ -352,10 +352,11 @@ namespace Blt.BuonoChiaro.BOL
 
     public enum enumSceltaAzione
     {
-        leggi,
-        annulla,
-        azzera,
-        supervisor
+        leggiCartaceo,
+        annullaCartaceo,
+        azzeraCartaceo,
+        supervisorCartaceo,
+        buonoPos
     }
 
     public enum enumTastoCustom

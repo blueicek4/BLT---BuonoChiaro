@@ -109,6 +109,26 @@ namespace Blt.BuonoChiaro.BOL
                 return true;
             }
         }
+        public Boolean AggiungiBuono(BuonoPasto buonoPasto)
+        {
+            if (!Convert.ToBoolean(config.AppSettings.Settings["isAbilitaResto"].Value))
+            {
+                if (this.GetTotale() + buonoPasto.Valore <= this.Totale)
+                {
+                    this._codici.Add(buonoPasto);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                this._codici.Add(buonoPasto);
+                return true;
+            }
+        }
         public List<BuonoPasto> GetRiepilogo()
         {
             List<BuonoPasto> lbp = _codici.GroupBy(c => new { c.Valore , c.Fornitore })
