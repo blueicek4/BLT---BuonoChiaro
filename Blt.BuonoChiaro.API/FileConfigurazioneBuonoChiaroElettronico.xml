@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ElencoPos>
+  <Pos workstationID="admin" indirizzoIpRemoto="127.0.0.1" portaRemota="20002" portaLocale="20006" />
+  <Pos workstationID="bltuser" indirizzoIpRemoto="127.0.0.1" portaRemota="9900" portaLocale="9905" />
+  <Pos workstationID="WK03" indirizzoIpRemoto="127.0.0.1" portaRemota="9900" portaLocale="9905" />
+  <Pos workstationID="WK04" indirizzoIpRemoto="127.0.0.1" portaRemota="9900" portaLocale="9905" />
+  <vendor vendorID="003" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+</ElencoPos>

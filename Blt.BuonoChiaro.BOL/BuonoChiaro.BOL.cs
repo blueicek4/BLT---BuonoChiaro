@@ -730,8 +730,9 @@ namespace Blt.BuonoChiaro.BOL
     }
     public enum enumCodOper
     {
-        APERTURASCONTRINO = 0,
-        VALIDAZIONE = 1,
+        GESTIONE = 0,
+        APERTURASCONTRINO = 1,
+        VALIDAZIONE = 2,
         STORNO = 3,
         CHIUSURASCONTRINO = 5,
         SUPERVISORVOID = 9

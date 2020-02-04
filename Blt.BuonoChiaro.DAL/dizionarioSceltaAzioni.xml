@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<root>
+  <SceltaAzione key="1chiave" value="1chiave lunga"/>
+  <SceltaAzione key="2chiave" value="2chiave lunga"/>
+  <SceltaAzione key="3chiave" value="3chiave lunga"/>
+  <SceltaAzione key="4chiave" value="4chiave lunga"/>
+  <SceltaAzione key="5chiave" value="5chiave lunga"/>
+  <SceltaAzione key="6chiave" value="6chiave lunga"/>
+  <SceltaAzione key="7chiave" value="7chiave lunga"/>
+  <SceltaAzione key="8chiave" value="8chiave lunga"/>
+</root>

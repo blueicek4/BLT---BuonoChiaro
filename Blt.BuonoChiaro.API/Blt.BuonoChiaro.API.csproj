@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Blt.BuonoChiaro.API</RootNamespace>
     <AssemblyName>Blt.BuonoChiaro.API</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -37,6 +40,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -46,22 +50,22 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="frwbo2">
-      <HintPath>..\External\frwbo2.dll</HintPath>
+    <Reference Include="frwbo">
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwbo.dll</HintPath>
     </Reference>
-    <Reference Include="GatewayPos">
-      <HintPath>..\..\GatewayPos\GatewayPos\bin\Debug\GatewayPos.dll</HintPath>
-    </Reference>
-    <Reference Include="HostPlugin">
-      <HintPath>..\External\HostPlugin.dll</HintPath>
+    <Reference Include="frwbo2, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwbo2.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\External\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="MessageBox">
-      <HintPath>..\External\MessageBox.dll</HintPath>
+    <Reference Include="MessageBox, Version=5.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\MessageBox.dll</HintPath>
     </Reference>
     <Reference Include="Spire.Barcode, Version=2.3.0.16035, Culture=neutral, PublicKeyToken=663f351905198cb3, processorArchitecture=MSIL">
       <HintPath>..\..\BLT - Passepartout Web Api\ConsoleApplication1\packages\FreeSpire.Barcode.2.3\lib\net35\Spire.Barcode.dll</HintPath>
@@ -81,6 +85,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\GatewayPos\GatewayPos\GatewayPos.csproj">
+      <Project>{bf293413-bfdd-4966-ba52-5cf8332263fb}</Project>
+      <Name>GatewayPos</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Blt.BuonoChiaro.BOL\Blt.BuonoChiaro.BOL.csproj">
       <Project>{1159770b-6be1-418b-abfc-ee4f096c0a21}</Project>
       <Name>Blt.BuonoChiaro.BOL</Name>
@@ -89,12 +97,21 @@
       <Project>{bb079263-0363-43ec-b3fb-285ec27ce743}</Project>
       <Name>Blt.BuonoChiaro.DAL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\HostPlugin\HostPlugin.csproj">
+      <Project>{97c5ff81-8183-49e5-a8e5-f13096ddd309}</Project>
+      <Name>HostPlugin</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="buonochiaro.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="FileConfigurazioneBuonoChiaroElettronico.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

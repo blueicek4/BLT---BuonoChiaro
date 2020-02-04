@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <root>
-  <SceltaAzione key="leggi" value="Leggi Ticket"/>
+  <SceltaAzione key="leggi" value="BuonoChiaro Cartaceo"/>
   <SceltaAzione key="annulla" value="Annulla Ticket"/>
   <SceltaAzione key="azzera" value="Azzera Scontrino"/>
   <SceltaAzione key="supervisor" value="Supervisor Void"/>
+  <SceltaAzione key="buonoelettronico" value="BuonoChiaro Elettronico"/>
   <ErroreAnnullaBuono key="annulla" value="Anulla e Rimuovi da Conto" />
   <ErroreAnnullaBuono key="mantieni" value="Interrompi" />
   <ErroreAnnullaBuono key="riprova" value="riprova" />

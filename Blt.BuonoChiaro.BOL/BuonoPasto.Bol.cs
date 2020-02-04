@@ -35,6 +35,7 @@ namespace Blt.BuonoChiaro.BOL
         public string CodicePagamento { get; set; }
         public enumCodOper UltimoComandoBuonoChiaro { get; set; }
         private Int32?  _indiceParametri {get;set;}
+        public EnumTipoBuonoPasto TipoBuonoPasto { get; set; }
         Configuration config;
         public Decimal GetTotale()
         {
@@ -200,7 +201,7 @@ namespace Blt.BuonoChiaro.BOL
                 this.CategoriaPagamento = config.AppSettings.Settings["CategoriaPagamento"].Value;
                 this.CodicePagamento = config.AppSettings.Settings["CodicePagamento"].Value;
                 this._indiceParametri = null;
-                this._codici = new List<BuonoPasto>();
+                this._codici = new List<BuonoPasto>();                
             }
             else if (conto.Tool_Parametri[0] == null)
             {
@@ -237,7 +238,6 @@ namespace Blt.BuonoChiaro.BOL
             }
 
         }
-
         public ContrattoConto Reset(ContrattoConto conto)
         {
             if(conto.Tool_Parametri.Length <= 1)
@@ -295,6 +295,12 @@ namespace Blt.BuonoChiaro.BOL
             this.CodiceTransazione = validationResponse.IDTR;
         }
         public BuonoPasto() { }
+    }
+    
+    public enum EnumTipoBuonoPasto
+    {
+        CARTACEO = 0,
+        ELETTRONICO = 1
     }
     public enum StatoConto
     {

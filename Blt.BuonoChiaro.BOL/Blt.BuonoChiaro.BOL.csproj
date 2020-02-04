@@ -48,11 +48,13 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="frwbo2, Version=2019.11.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="log4net">
       <HintPath>..\External\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="MessageBox">
-      <HintPath>..\External\MessageBox.dll</HintPath>
+    <Reference Include="MessageBox, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\MessageBox.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />

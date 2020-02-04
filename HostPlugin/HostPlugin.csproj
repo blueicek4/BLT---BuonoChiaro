@@ -105,59 +105,55 @@
   <ItemGroup>
     <Reference Include="Fasterflect, Version=2.0.3732.24338, Culture=neutral, PublicKeyToken=d3b50d974897f4b5, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\Fasterflect.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\Fasterflect.dll</HintPath>
     </Reference>
     <Reference Include="FastReflectionLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\FastReflectionLib.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\FastReflectionLib.dll</HintPath>
     </Reference>
-    <Reference Include="frwbo, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwbo, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwbo.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwbo.dll</HintPath>
     </Reference>
-    <Reference Include="frwbo2, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwbo2, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwbo2.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwbo2.dll</HintPath>
     </Reference>
-    <Reference Include="frwboCommon, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwboCommon, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwboCommon.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwboCommon.dll</HintPath>
     </Reference>
-    <Reference Include="frwdata, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwdata, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwdata.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwdata.dll</HintPath>
     </Reference>
     <Reference Include="FrwMx, Version=2.7.9.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\FrwMx.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\FrwMx.dll</HintPath>
     </Reference>
-    <Reference Include="frwNullableTypes, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwsys, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwNullableTypes.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwsys.dll</HintPath>
     </Reference>
-    <Reference Include="frwsys, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwsys2, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwsys.dll</HintPath>
-    </Reference>
-    <Reference Include="frwsys2, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwsys2.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwsys2.dll</HintPath>
     </Reference>
     <Reference Include="frwsys2.XmlSerializers, Version=2018.8.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwsys2.XmlSerializers.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwsys2.XmlSerializers.dll</HintPath>
     </Reference>
-    <Reference Include="frwUtilityDN, Version=2019.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="frwUtilityDN, Version=2019.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\frwUtilityDN.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\frwUtilityDN.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="MessageBox, Version=5.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="MessageBox, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External\MessageBox.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\BLT\ToolDiSviluppo_v6.0\v6.0.0\HostPlugin\Librerie\MessageBox.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
