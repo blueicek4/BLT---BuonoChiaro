@@ -47,7 +47,7 @@ namespace Blt.BuonoChiaro.API
                 enumTastoCustom azione;
                 if (string.IsNullOrEmpty(tastoCustom))
                     azione = enumTastoCustom.idDefault;
-                else if (tastoCustom == config.AppSettings.Settings["IdTastoCustom"].Value)
+                else if (tastoCustom == config.AppSettings.Settings["IdTastoCartaceo"].Value)
                     azione = enumTastoCustom.idBuonoCartaceo;
                 else if (tastoCustom == config.AppSettings.Settings["IdTastoPos"].Value)
                     azione = enumTastoCustom.idBuonoPos;
@@ -140,6 +140,88 @@ namespace Blt.BuonoChiaro.API
             Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             par = new ParametriConto(conto);
             par.Totale = conto.TotaleDaPagare;
+            var DaPagare = conto.TotaleDaPagare.Value;
+            if(conto.Pagamenti.Any(p=>p.Tipo.Categoria == par.CategoriaPagamento))
+            {
+                DaPagare = DaPagare - conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento).Sum(v => v.ListaBuoni.Sum(l => l.Importo * l.Numero));
+            }
+            GatewayPos.POSPaymentRequest posReq = new POSPaymentRequest()
+            {
+                applicationSender = "BLUETECH"
+                ,
+                ReferenceNumber = conto.IdGestionale.Value
+                ,
+                requestID = conto.IdGestionale.Value
+                ,
+                transactionNumber = conto.IdGestionale.Value
+                ,
+                totalAmount = DaPagare
+                ,
+                workstationID = conto.PuntoCassa
+            };
+            XmlDocument bceSetup = new XmlDocument();
+            bceSetup.Load("FileConfigurazioneBuonoChiaroElettronico.xml");
+            var posSetup = bceSetup.SelectSingleNode(String.Format("/ElencoPos/Pos[@workstationID = '{0}']", conto.CassiereLogin));
+            if (posSetup == null)
+            {
+                conto.Tool_Domanda = "Id postazione non trovato nel file di configurazione,\n controllare il file.";
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+                return conto;
+
+            }
+            GatewayPos.Gateway gw = new Gateway(Convert.ToInt32(posSetup.Attributes["portaLocale"].Value), posSetup.Attributes["indirizzoIpRemoto"].Value, Convert.ToInt32(posSetup.Attributes["portaRemota"].Value));
+            gw.OnTransactionData += Gw_OnTransactionData;
+            var response = gw.Pay(posReq);
+            if (response.success)
+            {
+                XmlDocument respXml = new XmlDocument();
+                respXml.LoadXml(response.XML);
+                var vaucherList = respXml.DocumentElement.SelectNodes("/CardServiceResponse/PrivateData");
+                foreach (XmlNode vaucher in vaucherList)
+                {
+                    BuonoPasto bp = new BuonoPasto();
+                    bp.ValoreTotale = response.totalAmount;
+                    bp.Fornitore = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@AcquirerID").Value;
+                    bp.CodiceTransazione = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@ApprovalCode").Value;
+                    bp.CodiceABarre = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@CardPAN").Value;
+                    var vaucherBlock = vaucher.Attributes["MealVoucherUsedList"].Value.Split(';');
+                    bp.Quantita = Int32.Parse(vaucherBlock[0]);
+                    bp.Valore = Decimal.Parse(vaucherBlock[1]) / 100;
+                    par.AggiungiBuono(bp);
+                }
+                conto = par.ToConto(conto);
+                conto.Tool_Domanda = String.Format("Ricevuto Pagamento per {0} € - Totale Buoni Pasto {1} €", response.totalAmount, par.GetTotale());
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+                XmlDocument noteXml = new XmlDocument();
+                noteXml.LoadXml(XmlPrinter);
+                //LIMITE 500 CHAR
+                int r = 0;
+                foreach (XmlNode riga in noteXml.SelectNodes("/DeviceRequest/Output/TextLine"))
+                {
+                    //LIMITE 500CHAR
+                    if (r > 6)
+                        conto.Note = conto.Note + Environment.NewLine + riga.InnerText;
+                    //LIMITE 500 CHAR
+                    r++;
+                }
+
+                return ScriviPagamento(conto, par);
+            }
+            else
+            {
+                conto.Tool_Domanda = "Errore nella transazione";
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+            }
+            return conto;
+        }
+
+        public ContrattoConto UltimaTransazioneBuonoChiaroElettronico(ContrattoConto conto)
+        {
+            ParametriConto par;
+            string buonoPasto = String.Empty;
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
+            par = new ParametriConto(conto);
+            par.Totale = conto.TotaleDaPagare;
             GatewayPos.POSPaymentRequest posReq = new POSPaymentRequest()
             {
                 applicationSender = "BLUETECH"
@@ -166,34 +248,29 @@ namespace Blt.BuonoChiaro.API
             }
             GatewayPos.Gateway gw = new Gateway(Convert.ToInt32(posSetup.Attributes["portaLocale"].Value), posSetup.Attributes["indirizzoIpRemoto"].Value, Convert.ToInt32(posSetup.Attributes["portaRemota"].Value));
             gw.OnTransactionData += Gw_OnTransactionData;
-            var response = gw.Pay(posReq);
+            var response = gw.LastTransaction(posReq);
             if (response.success)
             {
                 XmlDocument respXml = new XmlDocument();
                 respXml.LoadXml(response.XML);
-                BuonoPasto bp = new BuonoPasto();
-                bp.Valore = response.totalAmount;
-                bp.Fornitore = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@AcquirerID").Value;
-                bp.CodiceTransazione = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@ApprovalCode").Value;
-                bp.CodiceABarre = respXml.DocumentElement.SelectSingleNode("/CardServiceResponse/Tender/Authorisation/@CardPAN").Value;
-                par.AggiungiBuono(bp);
                 conto = par.ToConto(conto);
-                conto.Tool_Domanda = String.Format("Ricevuto Pagamento per {0} €", bp.Valore);
-                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
-                XmlDocument noteXml = new XmlDocument();
-                noteXml.LoadXml(XmlPrinter);
-                //LIMITE 500 CHAR
-                int r = 0;
-                foreach (XmlNode riga in noteXml.SelectNodes("/DeviceRequest/Output/TextLine"))
-                {
-                    //LIMITE 500CHAR
-                    if (r > 6)
-                        conto.Note = conto.Note + Environment.NewLine + riga.InnerText;
-                    //LIMITE 500 CHAR
-                    r++;
-                }
+                var idTerminale = "";
+                var stanTerminale = "";
+                var idTransazione = "";
+                var dataTransazione = "";
+                var valoreTransazione = 0M;
+                var risultatoTransazione = "";
 
-                return ScriviPagamento(conto, par);
+                conto.Tool_Domanda = String.Format("Ultima transazione:\nIdTerminale: {0} - STAN Terminale : {1}\nID = {2} - Data = {3}\nValore: {4} - Stato: {5}"
+                    , idTerminale
+                    , stanTerminale
+                    , idTransazione
+                    , dataTransazione
+                    , valoreTransazione
+                    , risultatoTransazione);
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+
+                return conto;
             }
             else
             {
@@ -202,6 +279,70 @@ namespace Blt.BuonoChiaro.API
             }
             return conto;
         }
+
+        public ContrattoConto StornaUltimaBuonoChiaroElettronico(ContrattoConto conto)
+        {
+            ParametriConto par;
+            string buonoPasto = String.Empty;
+            Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
+            par = new ParametriConto(conto);
+            par.Totale = conto.TotaleDaPagare;
+            GatewayPos.POSPaymentRequest posReq = new POSPaymentRequest()
+            {
+                applicationSender = "BLUETECH"
+                ,
+                ReferenceNumber = conto.IdGestionale.Value
+                ,
+                requestID = conto.IdGestionale.Value
+                ,
+                transactionNumber = conto.IdGestionale.Value
+                ,
+                totalAmount = conto.TotaleDaPagare.Value
+                ,
+                workstationID = conto.PuntoCassa
+            };
+            XmlDocument bceSetup = new XmlDocument();
+            bceSetup.Load("FileConfigurazioneBuonoChiaroElettronico.xml");
+            var posSetup = bceSetup.SelectSingleNode(String.Format("/ElencoPos/Pos[@workstationID = '{0}']", conto.CassiereLogin));
+            if (posSetup == null)
+            {
+                conto.Tool_Domanda = "Id postazione non trovato nel file di configurazione,\n controllare il file.";
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+                return conto;
+
+            }
+            GatewayPos.Gateway gw = new Gateway(Convert.ToInt32(posSetup.Attributes["portaLocale"].Value), posSetup.Attributes["indirizzoIpRemoto"].Value, Convert.ToInt32(posSetup.Attributes["portaRemota"].Value));
+            gw.OnTransactionData += Gw_OnTransactionData;
+            var response = gw.RefundLastTransaction(posReq);
+            if (response.success)
+            {
+                XmlDocument respXml = new XmlDocument();
+                respXml.LoadXml(response.XML);
+                conto = par.ToConto(conto);
+                var idTerminale = response.terminalID;
+                var stanTerminale = response.STAN;
+                var dataTransazione = response.TimeStamp;
+                var valoreTransazione = response.totalAmount;
+                var risultatoTransazione = response.success;
+
+                conto.Tool_Domanda = String.Format("Annullamento Ultima transazione:\nIdTerminale: {0} - STAN Terminale : {1}\nData = {2}\nValore: {3} - Stato: {4}"
+                    , idTerminale
+                    , stanTerminale
+                    , dataTransazione
+                    , valoreTransazione
+                    , risultatoTransazione);
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+
+                return conto;
+            }
+            else
+            {
+                conto.Tool_Domanda = String.Format("Errore nell'annullamento.\nErrore: {0}", response.success);
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
+            }
+            return conto;
+        }
+
         private void Gw_OnTransactionData(object sender, enumRequestType requestType, XmlDocument response)
             {
                 if (requestType == enumRequestType.Printer)
@@ -331,6 +472,10 @@ namespace Blt.BuonoChiaro.API
                                         par.Stato = StatoConto.fine;
                                         conto = par.ToConto(conto);
                                         return PagamentoBuonoChiaroElettronico(conto);
+                                    case "ultimobuonoelettronico":
+                                        par.Stato = StatoConto.fine;
+                                        conto = par.ToConto(conto);
+                                        return UltimaTransazioneBuonoChiaroElettronico(conto);
                                     default:
                                         break;
                                 }
@@ -437,7 +582,7 @@ namespace Blt.BuonoChiaro.API
                                         par = new ParametriConto();
                                         break;
                                     default:
-                                        if (conto.Tool_IdTastoCustom == config.AppSettings.Settings["IdTastoCustom"].Value)
+                                        if (conto.Tool_IdTastoCustom == config.AppSettings.Settings["IdTastoCartaceo"].Value)
                                             return MassimoBuoni(conto);
                                         conto.Tool_Domanda = String.Format(HelperDizionario.domandaMassimobuoni, par.Codici.Count, par.GetTotale());
                                         conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
@@ -447,7 +592,7 @@ namespace Blt.BuonoChiaro.API
                             }
                             break;
                         case StatoConto.massimoraggiunto:
-                            if (conto.Tool_IdTastoCustom == config.AppSettings.Settings["IdTastoCustom"].Value)
+                            if (conto.Tool_IdTastoCustom == config.AppSettings.Settings["IdTastoCartaceo"].Value)
                                 return MassimoBuoni(conto);
                             conto.Tool_Domanda = string.Format(HelperDizionario.domandaMassimoraggiunto, conto.TotaleDaPagare, par.GetTotale());
                             conto.Tool_TipoDomanda = EnumToolTipoDomanda.Info;
@@ -831,42 +976,63 @@ namespace Blt.BuonoChiaro.API
                     p.ListaBuoni = new List<PMBRigaPagamento.BuonoPastoXPagamento>();
                 }
                 var pag = conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento).ToList();
-                if (pag.Count > 0 && !par.Codici.Select(c => c.CodiceABarre).All(c => pag.First().ListaBuoni.Any(b => b.Buono == c)))
+            if (pag.Count > 0 && !par.Codici.Select(c => c.CodiceABarre).All(c => pag.First().ListaBuoni.Any(b => b.Buono == c)))
+            {
+                foreach (var c in par.Codici)
                 {
-                    foreach (var c in par.Codici)
-                    {
-                        //if(!pag.First().ListaBuoni.Any(b=>b.Buono == c.CodiceABarre))
-                        //{
-                        conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento && p.Tipo.Codice == par.CodicePagamento).First().ListaBuoni.Add(
-                            new PMBRigaPagamento.BuonoPastoXPagamento()
-                            { Buono = ragioneSocialeEmettitore, /*BuonoValoreRimborsato = 0,*/ BuonoAgenziaPIVA = pIvaEmettitore, /*BuonoValore = 0,*/ Importo = c.Valore, Numero = 1 });
-                        conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento && p.Tipo.Codice == par.CodicePagamento).First().Importo += c.Valore;
-                        //}
-                    }
+                    //if(!pag.First().ListaBuoni.Any(b=>b.Buono == c.CodiceABarre))
+                    //{
+                    conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento && p.Tipo.Codice == par.CodicePagamento).First().ListaBuoni.Add(
+                        new PMBRigaPagamento.BuonoPastoXPagamento()
+                        { Buono = ragioneSocialeEmettitore, /*BuonoValoreRimborsato = 0,*/ BuonoAgenziaPIVA = pIvaEmettitore, /*BuonoValore = 0,*/ Importo = c.Valore, Numero = c.Quantita });
+                    conto.Pagamenti.Where(p => p.Tipo.Categoria == par.CategoriaPagamento && p.Tipo.Codice == par.CodicePagamento).First().Importo += c.ValoreTotale;
+                    //}
                 }
-                else if (par.Codici.Count > 0)
+            }
+            else if (par.Codici.Count > 0)
+            {
+                foreach (BuonoPasto codice in par.Codici)
                 {
-                    conto.Pagamenti.Add(
-                        new PMBRigaPagamento()
-                        {
-                            Numero = 2,
-                            Importo = par.GetTotale(),
-                            Tipo = new PMBTipoPagamento() { Categoria = par.CategoriaPagamento, Codice = par.CodicePagamento },
-                            ListaBuoni = new List<PMBRigaPagamento.BuonoPastoXPagamento>() {
-                            new PMBRigaPagamento.BuonoPastoXPagamento() {
+                    if (conto.Pagamenti.Any(p => p.Tipo.Categoria == par.CategoriaPagamento))
+                    {
+                        conto.Pagamenti.First(p => p.Tipo.Categoria == par.CategoriaPagamento).Importo += codice.ValoreTotale;
+                        conto.Pagamenti.First(p => p.Tipo.Categoria == par.CategoriaPagamento)
+                            .ListaBuoni.Add(new PMBRigaPagamento.BuonoPastoXPagamento()
+                            {
                                 Buono = ragioneSocialeEmettitore,
                                 BuonoAgenziaPIVA = pIvaEmettitore,// par.Codici.First().CodiceABarre,
                                 BuonoValore = null,
                                 BuonoValoreRimborsato = null,
-                                Importo = par.Codici.First().Valore,
-                                Numero = 1
-                            }
-                            }
-                        });
+                                Importo = codice.Valore,
+                                Numero = codice.Quantita
+
+                            });
+                    }
+                    else
+                    {
+                        conto.Pagamenti.Add(
+                            new PMBRigaPagamento()
+                            {
+                                Numero = 2,
+                                Importo = par.GetTotale(),
+                                Tipo = new PMBTipoPagamento() { Categoria = par.CategoriaPagamento, Codice = par.CodicePagamento },
+                                ListaBuoni = new List<PMBRigaPagamento.BuonoPastoXPagamento>() {
+                                new PMBRigaPagamento.BuonoPastoXPagamento() {
+                                    Buono = ragioneSocialeEmettitore,
+                                    BuonoAgenziaPIVA = pIvaEmettitore,// par.Codici.First().CodiceABarre,
+                                    BuonoValore = null,
+                                    BuonoValoreRimborsato = null,
+                                    Importo = codice.Valore,
+                                    Numero = codice.Quantita
+                                    }
+                                }
+                            });
+                    }
                 }
-                else if (par.Codici.Count == 0 && pag.Count != 0)
-                {
-                }
+            }
+            else if (par.Codici.Count == 0 && pag.Count != 0)
+            {
+            }
                 if (par.GetTotale() <= conto.TotaleDaPagare)
                 {
                     conto.Pagamenti.First(p => p.Tipo.Categoria != "BuonoPasto").Importo = conto.TotaleDaPagare.Value - par.GetTotale();

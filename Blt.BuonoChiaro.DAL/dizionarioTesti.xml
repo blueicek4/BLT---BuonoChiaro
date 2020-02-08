@@ -5,6 +5,7 @@
   <SceltaAzione key="azzera" value="Azzera Scontrino"/>
   <SceltaAzione key="supervisor" value="Supervisor Void"/>
   <SceltaAzione key="buonoelettronico" value="BuonoChiaro Elettronico"/>
+  <SceltaAzione key="ultimobuonoelettronico" value="Ultimo BuonoChiaro Elettronico" />
   <ErroreAnnullaBuono key="annulla" value="Anulla e Rimuovi da Conto" />
   <ErroreAnnullaBuono key="mantieni" value="Interrompi" />
   <ErroreAnnullaBuono key="riprova" value="riprova" />

@@ -4,5 +4,14 @@
   <Pos workstationID="bltuser" indirizzoIpRemoto="127.0.0.1" portaRemota="9900" portaLocale="9905" />
   <Pos workstationID="WK03" indirizzoIpRemoto="127.0.0.1" portaRemota="9900" portaLocale="9905" />
   <Pos workstationID="WK04" indirizzoIpRemoto="127.0.0.1" portaRemota="9900" portaLocale="9905" />
+  <vendor vendorID="001" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="002" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
   <vendor vendorID="003" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="004" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="005" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="006" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="007" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="008" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="009" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
+  <vendor vendorID="010" nomeVendor="SODEXO" partitaIvaVendor="000000000000" />
 </ElencoPos>

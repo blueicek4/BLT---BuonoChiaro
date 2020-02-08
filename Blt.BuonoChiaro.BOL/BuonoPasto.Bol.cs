@@ -41,7 +41,7 @@ namespace Blt.BuonoChiaro.BOL
         {
             try
             {
-                return _codici.Sum(b => b.Valore);
+                return _codici.Sum(b => b.ValoreTotale);
             }
             catch
             {
@@ -55,7 +55,7 @@ namespace Blt.BuonoChiaro.BOL
             {
 
                 if (Codici.Count > 0)
-                    return Codici.Last().Valore;
+                    return Codici.Last().ValoreTotale;
                 else
                     return 0;
             }
@@ -94,7 +94,7 @@ namespace Blt.BuonoChiaro.BOL
             }
             if (!Convert.ToBoolean(config.AppSettings.Settings["isAbilitaResto"].Value))
             {
-                if (this.GetTotale() + bp.Valore <= this.Totale)
+                if (this.GetTotale() + bp.ValoreTotale <= this.Totale)
                 {
                     this._codici.Add(bp);
                     return true;
@@ -114,7 +114,7 @@ namespace Blt.BuonoChiaro.BOL
         {
             if (!Convert.ToBoolean(config.AppSettings.Settings["isAbilitaResto"].Value))
             {
-                if (this.GetTotale() + buonoPasto.Valore <= this.Totale)
+                if (this.GetTotale() + buonoPasto.ValoreTotale <= this.Totale)
                 {
                     this._codici.Add(buonoPasto);
                     return true;
@@ -132,8 +132,8 @@ namespace Blt.BuonoChiaro.BOL
         }
         public List<BuonoPasto> GetRiepilogo()
         {
-            List<BuonoPasto> lbp = _codici.GroupBy(c => new { c.Valore , c.Fornitore })
-                .Select(bp => new BuonoPasto() { CodiceABarre = bp.Count().ToString(), Valore = bp.First().Valore, Fornitore = bp.First().Fornitore }).ToList();
+            List<BuonoPasto> lbp = _codici.GroupBy(c => new { c.ValoreTotale , c.Fornitore })
+                .Select(bp => new BuonoPasto() { CodiceABarre = bp.Count().ToString(), ValoreTotale = bp.First().ValoreTotale, Fornitore = bp.First().Fornitore }).ToList();
             return lbp;
         }
         public ParametriConto(string xml)
@@ -276,10 +276,12 @@ namespace Blt.BuonoChiaro.BOL
     public class BuonoPasto
     {
         public string CodiceABarre { get; set; }
-        public decimal Valore { get; set; }
+        public decimal ValoreTotale { get; set; }
         public DateTime Scadenza { get; set; }
         public string Fornitore { get; set;}
         public string CodiceTransazione { get; set; }
+        public Int32 Quantita { get; set; }
+        public Decimal Valore { get; set; }
         //public BuonoPasto(string codice)
         //{
         //    this.CodiceABarre = codice;
@@ -290,7 +292,7 @@ namespace Blt.BuonoChiaro.BOL
         {
             this.CodiceABarre = validationResponse.Rows[0].BC;
             this.Fornitore = validationResponse.Rows[0].COMPANY.ToString();
-            this.Valore = Convert.ToDecimal(validationResponse.Rows[0].VB, new CultureInfo("en-US"));
+            this.ValoreTotale = Convert.ToDecimal(validationResponse.Rows[0].VB, new CultureInfo("en-US"));
             this.Scadenza = DateTime.ParseExact(validationResponse.Rows[0].DTSCAD, "yyyyMMdd", CultureInfo.InvariantCulture);
             this.CodiceTransazione = validationResponse.IDTR;
         }
@@ -471,6 +473,7 @@ namespace Blt.BuonoChiaro.BOL
         {
             try
             {
+                return true;
                 Configuration config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() { ExeConfigFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(HelperDizionario).Assembly.Location), "buonochiaro.config") }, ConfigurationUserLevel.None);
 
                 string percorso = System.IO.Path.Combine(System.IO.Directory.GetParent(System.IO.Path.GetDirectoryName(typeof(Helper).Assembly.Location)).ToString(), "FileConfigurazione.xml");
