@@ -364,7 +364,8 @@ namespace Blt.BuonoChiaro.BOL
         idDefault = 0,
         idBuonoCartaceo = 1,
         idBuonoPos = 2,
-        idGestione = 3
+        idGestione = 3,
+        idAnnullaBuonoPos = 4
     }
     public enum enumCompRefund
     {

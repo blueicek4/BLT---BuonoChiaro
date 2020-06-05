@@ -325,6 +325,7 @@ namespace Blt.BuonoChiaro.BOL
         azzerabpbuono,
         azzerabpesegui,
         fine,
+        annullaBuonoElettronico,
         azzerascontrino
     }
 

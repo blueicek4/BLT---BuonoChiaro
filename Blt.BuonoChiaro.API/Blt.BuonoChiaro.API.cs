@@ -45,12 +45,43 @@ namespace Blt.BuonoChiaro.API
             {
                 string tastoCustom = contrattoConto.Tool_IdTastoCustom;
                 enumTastoCustom azione;
+                ParametriConto par = new ParametriConto(contrattoConto);
+                if (contrattoConto.Tool_Custom2 == "domanda")
+                {
+                    switch(contrattoConto.Tool_Custom1)
+                    {
+                        case "annullaBuonoElettronico":
+                            
+                                if(contrattoConto.Tool_RispostaAScelta.ToLower() == "si")
+                            {
+                                tastoCustom = config.AppSettings.Settings["IdTastoAnnullaPos"].Value;
+                                par.Stato = StatoConto.annullaBuonoElettronico;
+                                contrattoConto.Tool_Custom1 = string.Empty;
+                                contrattoConto.Tool_Custom2 = string.Empty;
+                                contrattoConto = par.ToConto(contrattoConto);
+                            }
+                            else
+                            {
+                                contrattoConto.Tool_Custom1 = string.Empty;
+                                contrattoConto.Tool_Custom2 = string.Empty;
+                                par.Stato = StatoConto.fine;
+                                contrattoConto = par.ToConto(contrattoConto);
+                                return contrattoConto;
+                            }
+
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 if (string.IsNullOrEmpty(tastoCustom))
                     azione = enumTastoCustom.idDefault;
                 else if (tastoCustom == config.AppSettings.Settings["IdTastoCartaceo"].Value)
                     azione = enumTastoCustom.idBuonoCartaceo;
                 else if (tastoCustom == config.AppSettings.Settings["IdTastoPos"].Value)
                     azione = enumTastoCustom.idBuonoPos;
+                else if (tastoCustom == config.AppSettings.Settings["IdTastoAnnullaPos"].Value)
+                    azione = enumTastoCustom.idAnnullaBuonoPos;
                 else if (tastoCustom == config.AppSettings.Settings["IdTastoSetup"].Value)
                     azione = enumTastoCustom.idGestione;
                 else
@@ -66,6 +97,9 @@ namespace Blt.BuonoChiaro.API
                             case enumTastoCustom.idBuonoPos:
                                 contrattoConto = PagamentoBuonoChiaroElettronico(contrattoConto);
                                 break;
+                            case enumTastoCustom.idAnnullaBuonoPos:
+                                contrattoConto = StornaUltimaBuonoChiaroElettronico(contrattoConto);
+                                break;
                             case enumTastoCustom.idGestione:
                                 contrattoConto = SceltaAzioneBuonoChiaro(contrattoConto);
                                 break;
@@ -79,7 +113,6 @@ namespace Blt.BuonoChiaro.API
                         break;
                     case EnumToolEvento.PostChiusura:
                         contrattoConto = ScriviBuonoChiaro(contrattoConto);
-                        //conto = ScriviBuonoPasto(conto);
                         break;
                     case EnumToolEvento.Annullamento:
                         contrattoConto = AnnullaScontrinoChiuso(contrattoConto);
@@ -286,6 +319,17 @@ namespace Blt.BuonoChiaro.API
             string buonoPasto = String.Empty;
             Blt.BuonoChiaro.DAL.BuonoChiaroDb bcDb = new Blt.BuonoChiaro.DAL.BuonoChiaroDb();
             par = new ParametriConto(conto);
+            if(par.Stato != StatoConto.annullaBuonoElettronico)
+            {
+                conto.Tool_TipoDomanda = EnumToolTipoDomanda.SiNo;
+                conto.Tool_Domanda = "Vuoi veramente annullare l'ultimo Pagamento BuonoChiaro?";
+                conto.Tool_Custom1 = StatoConto.annullaBuonoElettronico.ToString();
+                conto.Tool_Custom2 = "domanda";
+                par.Stato = StatoConto.annullaBuonoElettronico;
+                conto = par.ToConto(conto);
+                return conto;
+            }
+            par.Stato = StatoConto.fine;
             par.Totale = conto.TotaleDaPagare;
             GatewayPos.POSPaymentRequest posReq = new POSPaymentRequest()
             {
@@ -472,10 +516,10 @@ namespace Blt.BuonoChiaro.API
                                         par.Stato = StatoConto.fine;
                                         conto = par.ToConto(conto);
                                         return PagamentoBuonoChiaroElettronico(conto);
-                                    case "ultimobuonoelettronico":
+                                    case "annullaBuonoElettronico":
                                         par.Stato = StatoConto.fine;
                                         conto = par.ToConto(conto);
-                                        return UltimaTransazioneBuonoChiaroElettronico(conto);
+                                        return StornaUltimaBuonoChiaroElettronico(conto);
                                     default:
                                         break;
                                 }
