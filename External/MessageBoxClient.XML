@@ -209,6 +209,13 @@
             </summary>
             <param name="codiceTessera">Codice tessera</param>
         </member>
+        <member name="M:PMessageBox.Client.IPlan.GetClienteEmail(System.String)">
+            <summary>
+            Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
+            </summary>
+            <param name="email">Email</param>
+            <returns>Array di strutture cliente</returns>
+        </member>
         <member name="M:PMessageBox.Client.IPlan.GetContiCliente(System.String,System.String,System.String)">
             <summary>
             Richiede al programma Passepartout Menu/Beauty/Retail i conti del cliente indicato
@@ -683,6 +690,13 @@
             </summary>
             <param name="codiceTessera">Codice tessera</param>
         </member>
+        <member name="M:PMessageBox.Client.IBeauty.GetClienteEmail(System.String)">
+            <summary>
+            Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
+            </summary>
+            <param name="email">Email</param>
+            <returns>Array di strutture cliente</returns>
+        </member>
         <member name="M:PMessageBox.Client.IBeauty.GetContiCliente(System.String,System.String,System.String)">
             <summary>
             Richiede al programma Passepartout Menu/Beauty/Retail i conti del cliente indicato
@@ -1132,6 +1146,13 @@
             Richiede al programma Passepartout il cliente in base al codice tessera
             </summary>
             <param name="codiceTessera">Codice tessera</param>
+        </member>
+        <member name="M:PMessageBox.Client.IMenu.GetClienteEmail(System.String)">
+            <summary>
+            Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
+            </summary>
+            <param name="email">Email</param>
+            <returns>Array di strutture cliente</returns>
         </member>
         <member name="M:PMessageBox.Client.IMenu.GetComanda(System.Int32)">
             <summary>
@@ -1656,6 +1677,13 @@
             </summary>
             <param name="codiceTessera">Codice tessera</param>
         </member>
+        <member name="M:PMessageBox.Client.IRetail.GetClienteEmail(System.String)">
+            <summary>
+            Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
+            </summary>
+            <param name="email">Email</param>
+            <returns>Array di strutture cliente</returns>
+        </member>
         <member name="M:PMessageBox.Client.IRetail.GetContiCliente(System.String,System.String,System.String)">
             <summary>
             Richiede al programma Passepartout Menu/Beauty/Retail i conti del cliente indicato
@@ -1997,6 +2025,19 @@
             <param name="codiceFiscale"></param>
             <returns>Array di strutture cliente</returns>
         </member>
+        <member name="M:PMessageBox.Client.IWelcome.GetCliente(System.String)">
+            <summary>
+            Richiede al programma Passepartout il cliente in base al codice tessera
+            </summary>
+            <param name="codiceTessera">Codice tessera</param>
+        </member>
+        <member name="M:PMessageBox.Client.IWelcome.GetClienteEmail(System.String)">
+            <summary>
+            Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
+            </summary>
+            <param name="email">Email</param>
+            <returns>Array di strutture cliente</returns>
+        </member>
         <member name="M:PMessageBox.Client.IWelcome.GetFornitori(System.Nullable{System.DateTime})">
             <summary>
             Richiede al programma Passepartout i fornitori, tutti o nuovi/modificati dalla data di ultimaModifica
@@ -2162,6 +2203,19 @@
             </summary>
             <param name="indirizzo">Indirizzo IP o DNS programma Passepartout</param>
             <param name="porta">Porta di ascolto MessageBox programma Passepartout</param>
+            <param name="utente">Utente di accesso programma Passepartout</param>
+            <param name="password">Password di accesso programma Passepartout</param>
+            <param name="azienda">Azienda programma Passepartout (se gestita)</param>
+            <param name="abilitaSicurezza">True per abilitare la criptazione dei dati su Internet, false per aumentare le prestazioni in rete locale</param>
+            <param name="abilitaCompressione">True per abilitare la compressione dati per aumentare le prestazioni su Internet o reti inferiori a 100Mbit</param>
+            <param name="usaHttp">Protocollo http</param>
+        </member>
+        <member name="M:PMessageBox.Client.MessageBoxClient.#ctor(PMessageBox.Client.TipoProdotto,System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Costruttore per installazioni Live
+            </summary>
+            <param name="tipoProdotto">Tipo prodotto Live</param>
+            <param name="dominio">Dominio installazione Live</param>
             <param name="utente">Utente di accesso programma Passepartout</param>
             <param name="password">Password di accesso programma Passepartout</param>
             <param name="azienda">Azienda programma Passepartout (se gestita)</param>
@@ -2484,9 +2538,14 @@
             <summary>
             Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
             </summary>
-            <param name="ragioneSociale"></param>
-            <param name="partitaIva"></param>
-            <param name="codiceFiscale"></param>
+            <param name="codiceTessera">Codice tessera</param>
+            <returns>Array di strutture cliente</returns>
+        </member>
+        <member name="M:PMessageBox.Client.MessageBoxClient.GetClienteEmail(System.String)">
+            <summary>
+            Richiede al programma Passepartout i clienti con i parametri di ricerca indicati
+            </summary>
+            <param name="email">Email</param>
             <returns>Array di strutture cliente</returns>
         </member>
         <member name="M:PMessageBox.Client.MessageBoxClient.GetClienti(System.Nullable{System.DateTime},System.String)">
@@ -2809,6 +2868,11 @@
         <member name="P:PMessageBox.Client.MessageBoxClient.AbilitaCompressione">
             <summary>
             True per abilitare la compressione dati per aumentare le prestazioni su Internet o reti inferiori a 100Mbit
+            </summary>
+        </member>
+        <member name="P:PMessageBox.Client.MessageBoxClient.Dominio">
+            <summary>
+            Dominio installazione Live
             </summary>
         </member>
         <member name="P:PMessageBox.Client.MessageBoxClient.Indirizzo">

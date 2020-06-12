@@ -16,6 +16,8 @@ using System.Data.SqlClient;
 using System.Globalization;
 using PMessageBox.Contract.Conto;
 using System.Xml.Linq;
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+
 
 namespace Blt.BuonoChiaro.BOL
 {
@@ -727,6 +729,8 @@ namespace Blt.BuonoChiaro.BOL
             }
             return domandaSceltaAzione;
         }
+
+
 
     }
     public enum enumCodOper

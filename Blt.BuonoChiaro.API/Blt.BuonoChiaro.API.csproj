@@ -85,7 +85,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\GatewayPos\GatewayPos\GatewayPos.csproj">
+    <ProjectReference Include="..\..\..\..\source\repos\GatewayPos\GatewayPos\GatewayPos.csproj">
       <Project>{bf293413-bfdd-4966-ba52-5cf8332263fb}</Project>
       <Name>GatewayPos</Name>
     </ProjectReference>

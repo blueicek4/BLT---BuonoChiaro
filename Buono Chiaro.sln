@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HostPlugin", "HostPlugin\Ho
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blt.BuonoChiaro.DAL", "Blt.BuonoChiaro.DAL\Blt.BuonoChiaro.DAL.csproj", "{BB079263-0363-43EC-B3FB-285EC27CE743}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayPos", "..\GatewayPos\GatewayPos\GatewayPos.csproj", "{BF293413-BFDD-4966-BA52-5CF8332263FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayPos", "..\..\..\source\repos\GatewayPos\GatewayPos\GatewayPos.csproj", "{BF293413-BFDD-4966-BA52-5CF8332263FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

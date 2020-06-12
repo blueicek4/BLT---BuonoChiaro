@@ -130,6 +130,23 @@ namespace Blt.BuonoChiaro.BOL
                 return true;
             }
         }
+
+        public Boolean RimuoviBuono(BuonoPasto buonoPasto, out string message)
+        {
+            message = String.Empty;
+            if (this._codici.Any(c => c.CodiceTransazione == buonoPasto.CodiceTransazione))
+            {
+                this._codici.RemoveAll(c => c.CodiceTransazione == buonoPasto.CodiceTransazione);
+                message = "Ok";
+                return true;
+            }
+            else
+            {
+                message = "Non Presente";
+                return false;
+            }
+        }
+
         public List<BuonoPasto> GetRiepilogo()
         {
             List<BuonoPasto> lbp = _codici.GroupBy(c => new { c.ValoreTotale , c.Fornitore })
@@ -498,5 +515,98 @@ namespace Blt.BuonoChiaro.BOL
             }
 
         }
+        public static void SetUltimoEvento(String transactionResponse, String workstationID)
+        {
+            try
+            {
+                XmlDocument doc = new XmlDocument();
+                if (!System.IO.File.Exists(System.Configuration.ConfigurationManager.AppSettings["UltimoIdFile"]))
+                {
+                    log.DebugFormat(@"Creo file Ultima Transazione con valore: {0}", transactionResponse);
+                    doc = new XmlDocument();
+                    XmlElement root = doc.CreateElement("Transazioni");
+                    XmlElement evento = doc.CreateElement("Workstation");
+                    evento.SetAttribute("ID", workstationID);
+                    XmlDocument xmlTransazione = new XmlDocument();
+                    xmlTransazione.LoadXml(transactionResponse);
+                    XmlNode transazione = doc.ImportNode(xmlTransazione.LastChild, true);
+                    evento.AppendChild(transazione);
+                    root.AppendChild(evento);
+                    doc.AppendChild(root);
+
+                    //doc.AppendChild()
+
+                }
+                else
+                {
+                    log.DebugFormat(@"Aggiorno file Ultima Transazione con valore: {0}", transactionResponse);
+                    doc = new XmlDocument();
+                    doc.Load(System.Configuration.ConfigurationManager.AppSettings["UltimoIdFile"]);
+
+                    if (doc.SelectSingleNode(String.Format("//Transazioni/Workstation[@ID = '{0}']", workstationID)) == null)
+                    {
+                        XmlElement evento = doc.CreateElement("Workstation");
+                        evento.SetAttribute("ID", workstationID);
+                        XmlDocument xmlTransazione = new XmlDocument();
+                        xmlTransazione.LoadXml(transactionResponse);
+                        XmlNode transazione = doc.ImportNode(xmlTransazione.LastChild, true);
+                        evento.AppendChild(transazione);
+                        //doc.CreateElement(transazione);
+                        doc.SelectSingleNode("Transazioni").AppendChild(evento);
+
+                    }
+                    else
+                    {
+                        var nodo = doc.SelectSingleNode(String.Format("//Transazioni/Workstation[@ID = '{0}']", workstationID));
+                        XmlDocument xmlTransazione = new XmlDocument();
+                        xmlTransazione.LoadXml(transactionResponse);
+                        XmlNode transazione = doc.ImportNode(xmlTransazione.LastChild, true);
+                        nodo.ReplaceChild(transazione, nodo.FirstChild);
+                    }
+
+                }
+                doc.Save(System.Configuration.ConfigurationManager.AppSettings["UltimoIdFile"]);
+            }
+            catch (Exception ex)
+            {
+                log.ErrorFormat("{0} - Eccezione! - Origine Riga: {1} - Messaggio: {2} \nMessaggio id: {3}", System.Reflection.MethodBase.GetCurrentMethod().Name, ex.ToString().Substring(ex.ToString().LastIndexOf(" ") + 1), ex.Message, null);
+                throw new Exception(ex.Message, ex);
+            }
+        }
+
+        public static XmlNode GetUltimoEvento(String workstationID)
+        {
+            try
+            {
+                log.Debug(@"Leggo ultima data notifica gestita");
+                if (!System.IO.File.Exists(System.Configuration.ConfigurationManager.AppSettings["UltimoIdFile"]))
+                {
+                    log.DebugFormat(@"File ultimoId non trovato in: {0}", System.Configuration.ConfigurationManager.AppSettings["UltimoIdFile"]);
+                    SetUltimoEvento(String.Empty, workstationID);
+                    return null;
+                }
+                var doc = new XmlDocument();
+                Random rnd = new Random();
+
+                System.Threading.Thread.Sleep(rnd.Next(50, 1000));
+                doc.Load(System.Configuration.ConfigurationManager.AppSettings["UltimoIdFile"]);
+                XmlNode evento = doc.SelectSingleNode(String.Format("//Transazioni/Workstation[@ID = '{0}']", workstationID));
+                if (evento == null)
+                {
+                    //SetUltimoEvento(String.Empty, workstationID);
+                    return null;
+                }
+                var raw = evento;
+                log.DebugFormat(@"Ultimo Evento recuperato per la workstationID {1}, valore: {0}", raw, workstationID);
+                return raw;
+            }
+            catch (Exception ex)
+            {
+                log.ErrorFormat("{0} - Eccezione! - Origine Riga: {1} - Messaggio: {2} \nMessaggio id: {3}", System.Reflection.MethodBase.GetCurrentMethod().Name, ex.ToString().Substring(ex.ToString().LastIndexOf(" ") + 1), ex.Message, null);
+                throw new Exception(ex.Message, ex);
+                //return 0;
+            }
+        }
+
     }
 }
